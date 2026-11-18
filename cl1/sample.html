@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLAIRE agent console</title>
+<style>
+:root{
+  --bg:#F3F4F1; --panel:#FFFFFF; --ink:#14201C; --muted:#56635E; --line:#D9DDD6; --soft:#FAFBF9;
+  --accent:#0F6B5C; --accent-soft:#DDEEEA; --amber:#9A5200; --amber-soft:#FBEBD3;
+  --red:#A12C25; --red-soft:#F8E1DF; --blue:#27508F; --blue-soft:#DFE8F6; --purple:#5B3585; --purple-soft:#ECE3F5;
+  --t-admin:#9AA39E; --t-note:#4B5D73; --t-labs:#2B63B0; --t-mar:#0F7A68; --t-proc:#7A4BA8; --t-orders:#A8791A;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,select,input{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+.top{background:var(--ink);color:#F3F4F1;padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center}
+.brand{font-weight:700;letter-spacing:.14em;font-size:15px}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav button{min-height:40px;padding:0 14px;border-radius:6px;border:1px solid transparent;background:transparent;color:#B9C4BF;cursor:pointer}
+.nav button[aria-current="true"]{background:#F3F4F1;color:var(--ink);font-weight:600}
+.note{font-size:12px;color:#B9C4BF;margin-left:auto}
+:focus-visible{outline:2px solid #C77A12;outline-offset:2px}
+main{padding:16px 20px 28px;display:grid;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.panel>h2,.h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;font-weight:600}
+.row{display:grid;gap:14px}
+.r-2{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.r-3{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr)}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.kpi b{display:block;font-size:24px;font-family:var(--mono);font-weight:600}
+.kpi span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #ECEEEA;vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+.scroll{overflow-x:auto}
+.code{font-family:var(--mono);font-weight:700}
+.badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:#E7EAE5;color:var(--muted);white-space:nowrap}
+.badge.ok{background:var(--accent-soft);color:#0A4F44}.badge.warn{background:var(--amber-soft);color:var(--amber)}
+.badge.bad{background:var(--red-soft);color:var(--red)}.badge.info{background:var(--blue-soft);color:var(--blue)}
+.btn{min-height:40px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+.bars{display:grid;gap:6px;font-size:12px}
+.bars .b{display:grid;grid-template-columns:58px minmax(0,1fr) 54px;gap:8px;align-items:center}
+.bars .t{display:flex;height:14px;border-radius:3px;overflow:hidden;background:#ECEEEA}
+.bars .t i{display:block;height:100%}
+.rates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:12px;margin-top:12px}
+.rates input{width:100%;min-height:36px;border:1px solid var(--line);border-radius:6px;padding:0 8px;font-family:var(--mono)}
+.chead{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.chead h1{font-size:18px}.chead p{color:var(--muted);font-size:13px;flex:1 1 220px}
+.chead select{min-height:40px;border-radius:6px;border:1px solid var(--line);background:#fff;padding:0 8px}
+svg text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:var(--ink)}
+.gwrap{overflow-x:auto}.gwrap svg{min-width:640px;width:100%;height:auto;display:block}
+.nd rect{fill:#fff;stroke:#B8C0BA;stroke-width:1.2}
+.nd.seen rect{fill:var(--accent-soft);stroke:var(--accent)}
+.nd.on rect{fill:var(--accent);stroke:var(--accent)}.nd.on text{fill:#fff;font-weight:600}
+.nd .ct{font:11px var(--mono);fill:var(--muted)}
+.ch rect{fill:var(--soft);stroke:#B8C0BA;stroke-dasharray:4 3}
+.ch.hit rect{fill:var(--amber-soft);stroke:var(--amber);stroke-dasharray:none}
+.ch.seen rect{stroke:var(--amber)}
+.ed{fill:none;stroke:#B8C0BA;stroke-width:1.4;marker-end:url(#arA)}
+.ed.on{stroke:var(--accent);stroke-width:2;marker-end:url(#arB)}
+.lk{stroke:#B8C0BA;stroke-dasharray:3 3}.lk.on{stroke:var(--amber)}
+.big{font-family:var(--mono);font-size:26px;font-weight:600}
+.sub{font-size:12px;color:var(--muted)}
+.cbar{display:flex;height:18px;border-radius:4px;overflow:hidden;background:#ECEEEA;margin:8px 0}
+.cbar i{display:block;height:100%;transition:width .25s}
+.lg{display:grid;gap:3px;font-size:12.5px}
+.lg div{display:flex;gap:8px;align-items:center}.lg i{width:10px;height:10px;border-radius:2px;flex:none}
+.lg span:last-child{margin-left:auto;font-family:var(--mono)}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:13px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.kv span:nth-child(even){font-family:var(--mono);text-align:right}
+.tl{list-style:none;margin:0;padding:0;max-height:380px;overflow:auto;display:grid;gap:4px}
+.tl li{display:flex;gap:8px;font-size:13px;align-items:baseline}
+.tl li.hd{margin-top:8px;font-weight:600;border-top:1px solid var(--line);padding-top:8px}
+.tl li.in{padding-left:14px}
+.tl .cx{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.tag{font-family:var(--mono);font-size:10px;text-transform:uppercase;padding:1px 5px;border-radius:3px;background:#E7EAE5;color:var(--muted);flex:none;min-width:54px;text-align:center}
+.tag.skill{background:var(--purple-soft);color:var(--purple)}.tag.tool{background:var(--blue-soft);color:var(--blue)}
+.tag.memory{background:var(--amber-soft);color:var(--amber)}.tag.result{background:var(--ink);color:#fff}.tag.plan{background:var(--accent-soft);color:#0A4F44}
+.tiles{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:3px}
+.tile{position:relative;aspect-ratio:3/4;border:1px dashed #BFC6C0;border-radius:3px;background:transparent;padding:0;cursor:pointer;font-family:var(--mono);font-size:9px;color:#8A948F}
+.tile.done{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-top:3px solid var(--tc)}
+.tile.low{background:repeating-linear-gradient(45deg,#ECEEEA,#ECEEEA 3px,#FAFBF9 3px,#FAFBF9 6px);color:#8A948F}
+.tile.read{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tile.now{box-shadow:0 0 0 2px var(--amber)}
+.tile.sel{box-shadow:0 0 0 2px var(--ink)}
+.pcard{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;font-size:13px}
+.pcard dl{margin:4px 0 0;display:grid;grid-template-columns:96px minmax(0,1fr);gap:3px 8px}
+.pcard dt{color:var(--muted)}.pcard dd{margin:0}
+.empty{color:#7A8580;font-size:12.5px}
+.res{border:1px solid var(--line);border-radius:6px;padding:10px;margin-bottom:8px}
+.res p{font-size:12.5px;color:var(--muted);margin:4px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.chip{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:var(--soft);border-radius:4px;min-height:28px;padding:0 8px;cursor:pointer}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.acts select{min-height:32px;border-radius:6px;border:1px solid var(--line);background:#fff;max-width:100%}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{min-height:40px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lead{font-size:13px;color:var(--muted);margin-bottom:12px;max-width:80ch}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.box{border:1px solid var(--line);border-radius:6px;padding:12px}
+.box h3{font-size:14px;margin-bottom:6px}
+.box ul{margin:0;padding-left:18px;font-size:13px}
+tr.new td{background:var(--amber-soft)}
+@media (max-width:1000px){.r-2,.r-3,.two{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.note{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">CLAIRE</div>
+  <nav class="nav" aria-label="Views">
+    <button data-v="dash" aria-current="true">Dashboard</button>
+    <button data-v="case">Case run</button>
+    <button data-v="mem">Memory</button>
+  </nav>
+  <div class="note">Synthetic data · placeholder token rates</div>
+</header>
+
+<main id="v-dash">
+  <div class="kpis" id="kpis"></div>
+  <div class="row r-2">
+    <section class="panel">
+      <h2>Cases</h2>
+      <div class="scroll"><table id="cases"></table></div>
+    </section>
+    <section class="panel">
+      <h2>Cost per case</h2>
+      <div class="lg" style="grid-auto-flow:column;justify-content:start;gap:14px;margin-bottom:8px">
+        <div><i style="background:var(--blue)"></i><span>Extraction</span></div><div><i style="background:#5FB3A3"></i><span>Agent reasoning</span></div>
+      </div>
+      <div class="bars" id="costbars"></div>
+      <p class="h2" style="margin:14px 0 0">Rates, dollars per million tokens</p>
+      <div class="rates">
+        <label>Extraction input<input type="number" step="0.1" min="0" data-r="exIn"></label>
+        <label>Extraction output<input type="number" step="0.1" min="0" data-r="exOut"></label>
+        <label>Reasoning input<input type="number" step="0.1" min="0" data-r="rsIn"></label>
+        <label>Reasoning output<input type="number" step="0.1" min="0" data-r="rsOut"></label>
+      </div>
+      <p class="sub" style="margin-top:8px">These are placeholders. Enter your models' real prices and every cost on this screen updates.</p>
+    </section>
+  </div>
+</main>
+
+<main id="v-case" hidden>
+  <div class="chead">
+    <h1>Case C-1042</h1>
+    <p>Inpatient · 60 pages · Payer A · 4 codes on the claim</p>
+    <button class="btn primary" id="run">Run agent</button>
+    <button class="btn" id="skip">Skip to end</button>
+    <label>Speed <select id="speed"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></label>
+  </div>
+  <div class="row r-2">
+    <section class="panel">
+      <h2>Agent traversal</h2>
+      <div class="gwrap" id="graph"></div>
+      <p class="sub">Solid boxes are graph nodes, with the number of times the agent passed through each. Dashed boxes are the memory and data it reached into.</p>
+    </section>
+    <section class="panel">
+      <h2>Context loaded right now</h2>
+      <div class="big" id="ctxTotal">0</div>
+      <div class="sub" id="ctxSub">tokens in the agent's context</div>
+      <div class="cbar" id="ctxBar"></div>
+      <div class="lg" id="ctxLg"></div>
+      <div class="kv" id="cost"></div>
+    </section>
+  </div>
+  <div class="row r-3">
+    <section class="panel">
+      <h2>Trace</h2>
+      <ul class="tl" id="tl" aria-live="polite"><li class="empty">Press Run agent. Every node visit, tool call and memory read is listed here.</li></ul>
+    </section>
+    <section class="panel">
+      <h2>Pages opened in full</h2>
+      <div class="tiles" id="tiles"></div>
+      <p class="sub" id="pgSub" style="margin-top:8px">0 of 60 pages opened</p>
+      <div class="pcard" id="pcard"><p class="empty">Select a page to see its page-map index card.</p></div>
+    </section>
+    <section class="panel">
+      <h2>Findings for coder review</h2>
+      <div id="findings"><p class="empty">Findings appear as the agent reaches a verdict on each code.</p></div>
+    </section>
+  </div>
+</main>
+
+<main id="v-mem" hidden>
+  <section class="panel">
+    <div class="tabs" role="tablist" id="mtabs">
+      <button role="tab" data-m="working" aria-selected="true">Working</button>
+      <button role="tab" data-m="semantic" aria-selected="false">Semantic</button>
+      <button role="tab" data-m="procedural" aria-selected="false">Procedural</button>
+      <button role="tab" data-m="episodic" aria-selected="false">Episodic</button>
+    </div>
+    <div id="mbody"></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+const usd = (n) => '$' + n.toFixed(2);
+const R = { exIn: 0.5, exOut: 2, rsIn: 3, rsOut: 15 };
+const cost = (c) => ({ ex: (c.exIn * R.exIn + c.exOut * R.exOut) / 1e6, rs: (c.rsIn * R.rsIn + c.rsOut * R.rsOut) / 1e6 });
+
+/* ---------- data ---------- */
+const mk = (id, type, pages, rsIn, rsOut, conf, uns, miss, fb, share, status) =>
+  ({ id, type, pages, exIn: pages * 1800, exOut: pages * 650, rsIn, rsOut, conf, uns, miss, fb, share, status });
+const CASES = [
+  mk('C-1035', 'Inpatient', 312, 410000, 21000, 9, 2, 4, 3, 5, 'Reviewed'),
+  mk('C-1036', 'ED', 48, 72000, 4500, 3, 0, 1, 0, 14, 'Reviewed'),
+  mk('C-1037', 'Inpatient', 187, 255000, 14000, 7, 1, 2, 2, 7, 'Reviewed'),
+  mk('C-1038', 'Outpatient', 22, 38000, 2600, 2, 0, 0, 0, 22, 'Reviewed'),
+  mk('C-1039', 'Inpatient', 640, 690000, 33000, 12, 3, 6, 5, 3, 'Reviewed'),
+  mk('C-1040', 'ED', 75, 96000, 6000, 4, 1, 1, 1, 11, 'Awaiting review'),
+  mk('C-1041', 'Inpatient', 228, 300000, 16000, 8, 0, 3, 0, 6, 'Awaiting review')
+];
+const TOTAL = 60, PAGE_TOK = 800, RECORD_TOK = TOTAL * PAGE_TOK, CTXMAX = 8000;
+const SECTIONS = [
+  [1, 1, 'admin', 'Fax cover'], [2, 3, 'admin', 'Face sheet'], [4, 8, 'note', 'ED note'], [9, 12, 'note', 'History and physical'],
+  [13, 18, 'labs', 'Lab results'], [19, 22, 'note', 'Progress note'], [23, 26, 'note', 'Cardiology consult'],
+  [27, 30, 'proc', 'Cath report'], [31, 38, 'mar', 'MAR'], [39, 44, 'note', 'Progress note'], [45, 48, 'note', 'Nursing note'],
+  [49, 52, 'labs', 'Lab results'], [53, 56, 'orders', 'Orders'], [57, 59, 'note', 'Discharge summary'], [60, 60, 'admin', 'Blank page']
+];
+const LOW = [1, 60];
+const CARDS = {
+  5:  { problems: 'chest pain', values: 'ECG: ST depression' },
+  10: { problems: 'CKD stage 3, hypothyroidism, type 2 diabetes', meds: 'metformin, levothyroxine' },
+  14: { values: 'troponin high, A1c 8.1, creatinine 1.8 (baseline 1.7), sodium 128' },
+  24: { problems: 'NSTEMI', procedures: 'cardiac cath planned', meds: 'heparin, aspirin' },
+  28: { procedures: 'left heart cath, operator and date recorded' },
+  33: { meds: 'heparin drip, aspirin, levothyroxine' },
+  36: { meds: 'insulin sliding scale', values: 'glucose checks every 6 hours' },
+  41: { problems: 'NSTEMI, type 2 diabetes, CKD stage 3, hyponatremia', meds: 'metformin held' },
+  50: { values: 'troponin trending down, creatinine 1.8, sodium 130' },
+  54: { procedures: 'fluid restriction ordered' },
+  58: { problems: 'NSTEMI, type 2 diabetes', procedures: 'left heart cath' }
+};
+const SUMMARY = '67-year-old man, ED to inpatient, chest pain. NSTEMI (p. 24), left heart cath on day 2 (p. 28). Type 2 diabetes, CKD stage 3 and low sodium noted. Discharged home on day 4 (p. 58).';
+const CLAIM = [
+  { code: 'I21.4', sys: 'ICD-10-CM', name: 'NSTEMI', desc: 'Non-ST elevation myocardial infarction', family: 'I21', skill: 'Acute MI skill', tok: 400, bucket: 'confirmed',
+    note: 'All four evidence items found.', items: [
+      { label: 'Troponin rise', found: true, pages: [14, 50] }, { label: 'ECG changes', found: true, pages: [5] },
+      { label: 'Physician states NSTEMI', found: true, pages: [24, 58] }, { label: 'Treatment given', found: true, pages: [28, 33] }] },
+  { code: '93458', sys: 'CPT', name: 'Left heart catheterization', desc: 'Left heart catheterization with coronary angiography', family: 'CPT cath', skill: 'Procedure skill', tok: 320, bucket: 'confirmed',
+    note: 'Performed, dated, and supported by I21.4.', items: [
+      { label: 'Procedure report present', found: true, pages: [28] }, { label: 'Date and operator recorded', found: true, pages: [28] },
+      { label: 'Supporting diagnosis linked', found: true, pages: [24] }] },
+  { code: 'E11.9', sys: 'ICD-10-CM', name: 'Type 2 diabetes', desc: 'Type 2 diabetes mellitus without complications', family: 'E11', skill: 'Chronic condition skill', tok: 360, bucket: 'confirmed',
+    note: 'Monitored, evaluated, assessed and treated this encounter.', items: [
+      { label: 'Monitored (glucose checks)', found: true, pages: [36] }, { label: 'Evaluated (A1c)', found: true, pages: [14] },
+      { label: 'Assessed in a note', found: true, pages: [41] }, { label: 'Treated (insulin, metformin held)', found: true, pages: [36, 41] }] },
+  { code: 'N17.9', sys: 'ICD-10-CM', name: 'Acute kidney failure', desc: 'Acute kidney failure, unspecified', family: 'N17', skill: 'AKI skill', tok: 380, bucket: 'unsupported',
+    note: 'Creatinine 1.8 against baseline 1.7, and no physician statement of AKI.', precedent: 'E-0031', items: [
+      { label: 'Creatinine rise of 0.3 or more', found: false, pages: [14, 50] }, { label: 'Physician states AKI', found: false, pages: [] },
+      { label: 'Renal function monitored', found: true, pages: [41] }] }
+];
+const LEADS = [
+  { code: 'N18.30', sys: 'ICD-10-CM', name: 'CKD stage 3', desc: 'Chronic kidney disease, stage 3 unspecified', family: 'N18', lead: 'CKD stage 3 on page cards 10 and 41, not on the claim', skill: 'Chronic condition skill', tok: 360, bucket: 'missed',
+    note: 'Assessed this encounter and changed treatment (metformin held).', items: [
+      { label: 'Physician documents CKD stage 3', found: true, pages: [10, 41] }, { label: 'Assessed this encounter', found: true, pages: [41] },
+      { label: 'Affects treatment', found: true, pages: [41] }] },
+  { code: 'E87.1', sys: 'ICD-10-CM', name: 'Hyponatremia', desc: 'Hypo-osmolality and hyponatremia', family: 'E87', lead: 'Sodium 128 on page card 14, not on the claim', skill: 'Electrolyte skill', tok: 340, bucket: 'missed',
+    note: 'Low sodium, named by the physician, treated with fluid restriction.', items: [
+      { label: 'Abnormal sodium value', found: true, pages: [14, 50] }, { label: 'Physician documents hyponatremia', found: true, pages: [41] },
+      { label: 'Treated (fluid restriction)', found: true, pages: [54] }] },
+  { code: 'E03.9', sys: 'ICD-10-CM', name: 'Hypothyroidism', desc: 'Hypothyroidism, unspecified', family: 'E03', lead: 'Levothyroxine on the MAR (page 33) with no matching diagnosis on the claim', skill: 'Medication lead skill', tok: 300, bucket: 'missed',
+    note: 'Drug given daily on the MAR, diagnosis documented in the history and physical.', items: [
+      { label: 'Drug administered', found: true, pages: [33] }, { label: 'Diagnosis documented', found: true, pages: [10] },
+      { label: 'Treated this encounter', found: true, pages: [33] }] }
+];
+const ALL = CLAIM.concat(LEADS);
+const EPISODES = [
+  { id: 'E-0031', pattern: 'AKI rejected when creatinine rise is under 0.3 and no physician states it', scope: 'N17 · Payer A', cases: 3, coders: 2, status: 'Precedent', cls: 'info', used: 4 },
+  { id: 'E-0027', pattern: 'Diabetes from the history list only, with no assessment or treatment: rejected', scope: 'E11 · all payers', cases: 6, coders: 4, status: 'Auto-trusted', cls: 'ok', used: 11 },
+  { id: 'E-0022', pattern: 'Sepsis coded from "rule out sepsis" in an ED note: rejected', scope: 'A41 · all payers', cases: 5, coders: 3, status: 'Auto-trusted', cls: 'ok', used: 7 },
+  { id: 'E-0019', pattern: 'Malnutrition accepted on a dietitian assessment with no physician statement', scope: 'E44 · Payer B', cases: 4, coders: 2, status: 'Needs SME: coders disagree', cls: 'bad', used: 2 },
+  { id: 'E-0012', pattern: 'Pressure ulcer stage taken from the nursing note once the physician documents the ulcer', scope: 'L89 · all payers', cases: 8, coders: 5, status: 'Promoted to skill', cls: 'warn', used: 15 }
+];
+const ONTOLOGY = [
+  ['Diagnosis', ['Monitored, evaluated, assessed or treated in this encounter', 'Stated by a physician or other qualified provider', 'Evidence quote with page reference']],
+  ['Procedure or service', ['Report shows it was performed', 'Date and performing provider', 'Supported by a diagnosis (medical necessity)']],
+  ['Medication administration', ['Drug, dose and route', 'Time given and who gave it', 'Linked to the diagnosis it treats']]
+];
+const KG = {
+  'NSTEMI': { 'Labs': ['Troponin rise'], 'Findings': ['ECG ST depression', 'Chest pain'], 'Drugs': ['Heparin', 'Aspirin'], 'Procedures': ['Left heart cath'], 'Found on': ['Cardiology consult', 'Lab results', 'MAR'] },
+  'Acute kidney injury': { 'Labs': ['Creatinine rise 0.3+', 'Urine output drop'], 'Findings': ['Physician states AKI'], 'Drugs': ['IV fluids', 'Nephrotoxins held'], 'Procedures': ['Renal ultrasound'], 'Found on': ['Lab results', 'Progress note'] },
+  'Hyponatremia': { 'Labs': ['Sodium under 135'], 'Findings': ['Physician diagnosis'], 'Drugs': ['Salt tablets', 'Hypertonic saline'], 'Procedures': ['Fluid restriction'], 'Found on': ['Lab results', 'Orders'] },
+  'Hypothyroidism': { 'Labs': ['TSH'], 'Findings': ['Listed in history'], 'Drugs': ['Levothyroxine'], 'Procedures': ['None typical'], 'Found on': ['MAR', 'History and physical'] }
+};
+const section = (n) => SECTIONS.find((s) => n >= s[0] && n <= s[1]);
+
+/* ---------- run state ---------- */
+let steps = [], idx = 0, timer = null, speed = 1, selected = null, prev = null;
+let ctx, tok, counts, opened, peak, done = false, liveEp = [], lookups = {};
+const CTXDEF = [['system', 'System prompt', '#8A948F'], ['summary', 'Case summary', '#0F6B5C'], ['skill', 'Skill (procedural)', '#7A4BA8'],
+  ['lessons', 'Past feedback (episodic)', '#C77A12'], ['pages', 'Record pages', '#27508F'], ['tools', 'Tool results', '#4B5D73']];
+const ctxTotal = () => Object.values(ctx).reduce((a, b) => a + b, 0);
+const liveCase = () => ({ id: 'C-1042', type: 'Inpatient', pages: 60, exIn: tok.exIn, exOut: tok.exOut, rsIn: tok.rsIn, rsOut: tok.rsOut,
+  conf: 3, uns: 1, miss: 3, fb: liveEp.length, share: Math.round(peak / RECORD_TOK * 100), status: 'Awaiting review' });
+
+/* ---------- dashboard ---------- */
+function renderDash() {
+  const rows = done ? CASES.concat([liveCase()]) : CASES;
+  const tot = (f) => rows.reduce((a, c) => a + f(c), 0);
+  const c$ = (c) => { const k = cost(c); return k.ex + k.rs; };
+  const k = [[rows.length, 'Cases processed'], [fmt(tot((c) => c.pages)), 'Pages extracted'], [usd(tot(c$) / rows.length), 'Average cost per case'],
+    [Math.round(tot((c) => c.share) / rows.length) + '%', 'Average peak context, share of record'], [tot((c) => c.miss), 'Missed codes found'], [tot((c) => c.fb) , 'Coder corrections saved']];
+  $('kpis').innerHTML = k.map((x) => '<div class="kpi"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
+  $('cases').innerHTML = '<tr><th>Case</th><th>Type</th><th class="n">Pages</th><th class="n">Tokens billed</th><th class="n">Peak context</th><th class="n">Cost</th><th class="n">Confirmed</th><th class="n">Unsupported</th><th class="n">Missed</th><th>Status</th></tr>' +
+    rows.map((c) => '<tr><td class="code">' + c.id + '</td><td>' + c.type + '</td><td class="n">' + c.pages + '</td><td class="n">' + fmt(c.exIn + c.exOut + c.rsIn + c.rsOut) +
+      '</td><td class="n">' + c.share + '%</td><td class="n">' + usd(c$(c)) + '</td><td class="n">' + c.conf + '</td><td class="n">' + c.uns + '</td><td class="n">' + c.miss +
+      '</td><td><span class="badge ' + (c.status === 'Reviewed' ? 'ok' : 'warn') + '">' + c.status + '</span></td></tr>').join('') +
+    (done ? '' : '<tr><td class="code">C-1042</td><td>Inpatient</td><td class="n">60</td><td colspan="6" class="empty">Not run yet</td><td><button class="btn sm" id="openCase">Open and run</button></td></tr>');
+  const max = Math.max(...rows.map(c$));
+  $('costbars').innerHTML = rows.map((c) => { const q = cost(c); return '<div class="b"><span class="code">' + c.id + '</span><div class="t"><i style="width:' + (q.ex / max * 100) +
+    '%;background:var(--blue)"></i><i style="width:' + (q.rs / max * 100) + '%;background:#5FB3A3"></i></div><span style="font-family:var(--mono);text-align:right">' + usd(q.ex + q.rs) + '</span></div>'; }).join('');
+  const oc = $('openCase'); if (oc) oc.onclick = () => { show('case'); $('run').click(); };
+}
+document.querySelectorAll('[data-r]').forEach((i) => { i.value = R[i.dataset.r]; i.oninput = () => { R[i.dataset.r] = Number(i.value) || 0; renderDash(); renderCost(); }; });
+
+/* ---------- graph ---------- */
+const NODES = { intake: [60, 40, 'Intake'], extract: [180, 40, 'Extract'], pagemap: [300, 40, 'Page map'], summary: [420, 40, 'Case summary'], plan: [540, 40, 'Plan'], review: [680, 40, 'Coder review'],
+  skill: [140, 140, 'Load skill'], search: [270, 140, 'Find pages'], read: [400, 140, 'Read pages'], check: [530, 140, 'Check rules'], verdict: [660, 140, 'Verdict'] };
+const CHIPS = { proc: [140, 'Procedural memory', 140], pmap: [270, 'Page map + search', 270], pages: [400, 'Record pages', 400], sem: [495, 'Code tables', 520], epi: [615, 'Past feedback', 540] };
+const EDGES = { 'intake-extract': 'M112,40 H126', 'extract-pagemap': 'M232,40 H246', 'pagemap-summary': 'M352,40 H366', 'summary-plan': 'M472,40 H486', 'plan-review': 'M592,40 H626',
+  'plan-skill': 'M520,59 V90 H140 V119', 'skill-search': 'M192,140 H216', 'search-read': 'M322,140 H346', 'read-check': 'M452,140 H476', 'check-verdict': 'M582,140 H606', 'verdict-plan': 'M660,121 V102 H560 V61' };
+function buildGraph() {
+  const mkr = (id, c) => '<marker id="' + id + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="' + c + '"/></marker>';
+  let s = '<svg viewBox="0 0 760 262" role="img" aria-label="Agent graph: intake, extract, page map, case summary, plan, then a loop of load skill, find pages, read pages, check rules and verdict, ending in coder review"><defs>' +
+    mkr('arA', '#B8C0BA') + mkr('arB', '#0F6B5C') + '</defs>';
+  for (const k in EDGES) s += '<path class="ed" id="e-' + k + '" d="' + EDGES[k] + '"/>';
+  s += '<text x="330" y="84" style="font-size:11px;fill:#56635E">next code</text><text x="596" y="96" style="font-size:11px;fill:#56635E">done</text>';
+  for (const k in CHIPS) { const c = CHIPS[k]; s += '<line class="lk" id="l-' + k + '" x1="' + c[2] + '" y1="159" x2="' + c[0] + '" y2="214"/>'; }
+  for (const k in NODES) { const n = NODES[k];
+    s += '<g class="nd" id="n-' + k + '"><rect x="' + (n[0] - 52) + '" y="' + (n[1] - 19) + '" width="104" height="38" rx="6"/><text x="' + n[0] + '" y="' + (n[1] + 4) + '" text-anchor="middle">' + n[2] +
+      '</text><text class="ct" id="c-' + k + '" x="' + (n[0] + 48) + '" y="' + (n[1] - 23) + '" text-anchor="end"></text></g>'; }
+  for (const k in CHIPS) { const c = CHIPS[k];
+    s += '<g class="ch" id="h-' + k + '"><rect x="' + (c[0] - 56) + '" y="214" width="112" height="30" rx="15"/><text x="' + c[0] + '" y="233" text-anchor="middle">' + c[1] +
+      '</text><text class="ct" id="hc-' + k + '" x="' + c[0] + '" y="258" text-anchor="middle" style="font:11px var(--mono);fill:#56635E"></text></g>'; }
+  $('graph').innerHTML = s + '</svg>';
+}
+function visit(k) {
+  document.querySelectorAll('.nd.on').forEach((n) => n.classList.replace('on', 'seen'));
+  document.querySelectorAll('.ch.hit').forEach((n) => n.classList.replace('hit', 'seen'));
+  counts[k] = (counts[k] || 0) + 1;
+  $('n-' + k).classList.remove('seen'); $('n-' + k).classList.add('on');
+  $('c-' + k).textContent = counts[k] > 1 ? '×' + counts[k] : '';
+  const e = prev && $('e-' + prev + '-' + k); if (e) e.classList.add('on');
+  prev = k;
+}
+function hit(k, n) {
+  counts['h' + k] = (counts['h' + k] || 0) + (n || 1);
+  $('h-' + k).classList.remove('seen'); $('h-' + k).classList.add('hit'); $('l-' + k).classList.add('on');
+  $('hc-' + k).textContent = counts['h' + k] + (counts['h' + k] === 1 ? ' call' : ' calls');
+}
+
+/* ---------- context, cost, trace, pages ---------- */
+function llm(out) { tok.rsIn += ctxTotal(); tok.rsOut += out; tok.llm++; }
+function renderCtx() {
+  const t = ctxTotal(); peak = Math.max(peak, t);
+  $('ctxTotal').textContent = fmt(t);
+  $('ctxSub').textContent = 'tokens in context · ' + (t / RECORD_TOK * 100).toFixed(1) + '% of the ' + fmt(RECORD_TOK) + '-token record · peak ' + fmt(peak);
+  $('ctxBar').innerHTML = CTXDEF.map((d) => '<i style="width:' + (ctx[d[0]] / CTXMAX * 100) + '%;background:' + d[2] + '"></i>').join('');
+  $('ctxLg').innerHTML = CTXDEF.map((d) => '<div><i style="background:' + d[2] + '"></i><span>' + d[1] + '</span><span>' + fmt(ctx[d[0]]) + '</span></div>').join('');
+  renderCost();
+}
+function renderCost() {
+  if (!tok) return;
+  const q = cost(tok);
+  $('cost').innerHTML = '<span>Extraction tokens, in / out</span><span>' + fmt(tok.exIn) + ' / ' + fmt(tok.exOut) + '</span><span>Extraction cost</span><span>' + usd(q.ex) +
+    '</span><span>Reasoning tokens, in / out</span><span>' + fmt(tok.rsIn) + ' / ' + fmt(tok.rsOut) + '</span><span>Reasoning cost</span><span>' + usd(q.rs) +
+    '</span><span><b>Case cost so far</b></span><span><b>' + usd(q.ex + q.rs) + '</b></span><span>Model calls · tool calls</span><span>' + tok.llm + ' · ' + tok.tools + '</span>';
+}
+function trace(tag, text, cls) {
+  const li = document.createElement('li'); if (cls) li.className = cls;
+  li.innerHTML = '<span class="tag ' + tag + '">' + tag + '</span><span>' + text + '</span>' + (cls === 'in' ? '<span class="cx">ctx ' + fmt(ctxTotal()) + '</span>' : '');
+  $('tl').appendChild(li); $('tl').scrollTop = $('tl').scrollHeight;
+}
+function buildTiles() {
+  $('tiles').innerHTML = '';
+  for (let n = 1; n <= TOTAL; n++) {
+    const b = document.createElement('button'); b.className = 'tile'; b.id = 't' + n; b.textContent = n;
+    b.setAttribute('aria-label', 'Page ' + n); b.style.setProperty('--tc', 'var(--t-' + section(n)[2] + ')');
+    b.onclick = () => selectPage(n); $('tiles').appendChild(b);
+  }
+}
+function selectPage(n) {
+  if (selected) $('t' + selected).classList.remove('sel');
+  selected = n; $('t' + n).classList.add('sel');
+  const s = section(n), c = CARDS[n] || {};
+  if (!$('t' + n).classList.contains('done')) { $('pcard').innerHTML = '<b>Page ' + n + '</b><p class="empty">Not extracted yet.</p>'; return; }
+  const row = (k, v) => '<dt>' + k + '</dt><dd>' + (v || '<span class="empty">none listed</span>') + '</dd>';
+  $('pcard').innerHTML = '<b>Page ' + n + ' · ' + s[3] + '</b><dl>' + row('Opened in full', opened.has(n) ? 'Yes' : 'No, index card only') + row('Problems', c.problems) +
+    row('Medications', c.meds) + row('Procedures', c.procedures) + row('Abnormal values', c.values) + '</dl>';
+}
+function openPages(pages) {
+  document.querySelectorAll('.tile.now').forEach((t) => t.classList.remove('now'));
+  pages.forEach((p) => { opened.add(p); $('t' + p).classList.add('read', 'now'); });
+  $('pgSub').textContent = opened.size + ' of 60 pages opened · the rest stayed as index cards';
+}
+function addFinding(c) {
+  if (!$('findings').querySelector('.res')) $('findings').innerHTML = '';
+  const b = { confirmed: ['ok', 'Confirmed'], unsupported: ['bad', 'Lacks support'], missed: ['info', 'Possibly missed'] }[c.bucket];
+  const pages = [...new Set(c.items.flatMap((i) => i.pages))].sort((x, y) => x - y);
+  const el = document.createElement('article'); el.className = 'res'; el.dataset.code = c.code; el.dataset.family = c.family;
+  el.innerHTML = '<div><span class="badge ' + b[0] + '">' + b[1] + '</span> <span class="code">' + c.code + '</span> ' + c.name + '</div><p>' + c.note + '</p><div class="chips">' +
+    pages.map((p) => '<button class="chip" data-p="' + p + '">p. ' + p + '</button>').join('') + '</div><div class="acts"><button class="btn sm acc">Accept</button><button class="btn sm rej">Reject</button></div>';
+  $('findings').appendChild(el);
+}
+
+/* ---------- script ---------- */
+function S(ms, fn) { steps.push({ ms, fn }); }
+function codeSteps(c, src) {
+  const pages = [...new Set(c.items.flatMap((i) => i.pages))];
+  const seen = new Set();
+  S(500, () => { visit('plan'); ctx.skill = ctx.lessons = ctx.pages = ctx.tools = 0; llm(150); trace('plan', c.code + ' ' + c.name + ' · ' + src, 'hd'); renderCtx(); });
+  S(500, () => { visit('skill'); hit('proc'); ctx.skill = c.tok; tok.tools++; trace('skill', 'Loaded ' + c.skill + ' (' + c.tok + ' tokens)', 'in'); renderCtx(); });
+  S(550, () => { visit('search'); hit('pmap', 2); ctx.tools += 120; tok.tools += 2; llm(90); trace('tool', 'find_pages and search_text returned p. ' + pages.join(', '), 'in'); renderCtx(); });
+  c.items.forEach((it) => S(550, () => {
+    visit('read'); const fresh = it.pages.filter((p) => !seen.has(p)); fresh.forEach((p) => seen.add(p));
+    if (fresh.length) { hit('pages', fresh.length); ctx.pages += fresh.length * PAGE_TOK; tok.tools += fresh.length; }
+    openPages(it.pages); llm(110);
+    trace('tool', it.label + ': ' + (it.found ? 'found' : 'not found') + (it.pages.length ? ' · read_page ' + it.pages.join(', ') : ''), 'in'); renderCtx();
+  }));
+  S(550, () => { visit('check'); hit('sem'); ctx.tools += 140; tok.tools++; lookups[c.code] = (lookups[c.code] || 0) + 1;
+    trace('tool', 'lookup_code ' + c.code + ', checked against the ontology rules', 'in');
+    if (c.precedent) { hit('epi'); ctx.lessons = 180; tok.tools++; trace('memory', 'Past feedback ' + c.precedent + ' retrieved for ' + c.family + ' and Payer A', 'in'); }
+    llm(120); renderCtx(); });
+  S(550, () => { visit('verdict'); llm(220); addFinding(c);
+    trace('result', { confirmed: 'Confirmed', unsupported: 'Lacks support', missed: 'Possibly missed' }[c.bucket] + ': ' + c.note, 'in'); renderCtx(); });
+}
+function buildSteps() {
+  steps = [];
+  S(300, () => { visit('intake'); trace('plan', 'Record received: 60 pages, 4 codes on the claim', 'hd'); });
+  for (let b = 0; b < 6; b++) S(350, () => {
+    if (b === 0) visit('extract');
+    for (let n = b * 10 + 1; n <= b * 10 + 10; n++) { $('t' + n).classList.add('done'); if (LOW.includes(n)) $('t' + n).classList.add('low'); }
+    tok.exIn += 18000; tok.exOut += 6500; tok.llm += 10; trace('tool', 'Extracted pages ' + (b * 10 + 1) + ' to ' + (b * 10 + 10) + ', one vision call per page'); renderCtx();
+  });
+  S(500, () => { visit('pagemap'); trace('memory', 'Page map stored: 60 index cards, kept outside the context'); });
+  S(600, () => { visit('summary'); tok.rsIn += 4800; tok.rsOut += 880; tok.llm++; ctx.summary = 880; trace('memory', 'Case summary rolled up from the index cards (880 tokens, stays in context)'); renderCtx(); });
+  CLAIM.forEach((c) => codeSteps(c, 'from the claim'));
+  S(600, () => { visit('plan'); ctx.skill = ctx.lessons = ctx.pages = ctx.tools = 0; hit('pmap'); tok.tools++; llm(180);
+    trace('plan', 'Discover: page cards compared with the claim, 3 leads not coded', 'hd'); renderCtx(); });
+  LEADS.forEach((c) => { S(350, () => trace('plan', 'Lead: ' + c.lead)); codeSteps(c, 'lead from the record'); });
+  S(600, () => { visit('plan'); ctx.skill = ctx.lessons = ctx.pages = ctx.tools = 0; renderCtx(); });
+  S(500, () => { visit('review'); done = true; document.querySelectorAll('.tile.now').forEach((t) => t.classList.remove('now'));
+    trace('result', 'Run complete: 3 confirmed, 1 lacking support, 3 possibly missed. ' + opened.size + ' of 60 pages opened in full.', 'hd');
+    $('run').textContent = 'Replay'; renderDash(); });
+}
+function reset() {
+  clearTimeout(timer); idx = 0; selected = null; prev = null; done = false; peak = 0; lookups = {};
+  ctx = { system: 420, summary: 0, skill: 0, lessons: 0, pages: 0, tools: 0 };
+  tok = { exIn: 0, exOut: 0, rsIn: 0, rsOut: 0, llm: 0, tools: 0 }; counts = {}; opened = new Set();
+  buildGraph(); buildTiles(); $('tl').innerHTML = '';
+  $('findings').innerHTML = '<p class="empty">Findings appear as the agent reaches a verdict on each code.</p>';
+  $('pcard').innerHTML = '<p class="empty">Select a page to see its page-map index card.</p>';
+  $('pgSub').textContent = '0 of 60 pages opened';
+  renderCtx(); buildSteps(); renderDash();
+}
+function next() { if (idx >= steps.length) return; const s = steps[idx++]; timer = setTimeout(() => { s.fn(); next(); }, s.ms / speed); }
+$('run').onclick = () => { reset(); next(); };
+$('skip').onclick = () => { clearTimeout(timer); if (idx >= steps.length) reset(); while (idx < steps.length) steps[idx++].fn(); };
+$('speed').onchange = (e) => { speed = Number(e.target.value); };
+
+const REASONS = ['Insufficient documentation', 'History only, not addressed this encounter', 'Wrong specificity', 'Payer rule', 'Not clinically valid'];
+$('findings').addEventListener('click', (e) => {
+  const t = e.target, card = t.closest('.res'); if (!card) return;
+  if (t.classList.contains('chip')) { selectPage(Number(t.dataset.p)); return; }
+  const acts = card.querySelector('.acts');
+  if (t.classList.contains('acc')) acts.innerHTML = '<span class="badge ok">Accepted by coder</span>';
+  else if (t.classList.contains('rej')) acts.innerHTML = '<label>Reason <select>' + REASONS.map((r) => '<option>' + r + '</option>').join('') + '</select></label><button class="btn sm save">Save feedback</button>';
+  else if (t.classList.contains('save')) {
+    const reason = acts.querySelector('select').value, id = 'E-00' + (32 + liveEp.length);
+    liveEp.unshift({ id, pattern: 'Coder rejected ' + card.dataset.code + ': ' + reason, scope: card.dataset.family + ' · Payer A', cases: 1, coders: 1, status: 'New precedent, no review needed', cls: 'info', used: 0, isNew: true });
+    acts.innerHTML = '<span class="badge bad">Rejected: ' + reason + '</span> <span class="sub">saved as ' + id + '</span>';
+    hit('epi'); trace('memory', 'Coder feedback on ' + card.dataset.code + ' saved to episodic memory as ' + id); renderDash();
+  }
+});
+
+/* ---------- memory explorer ---------- */
+function kgSvg(name) {
+  const g = KG[name], keys = Object.keys(g), pos = [[100, 20], [100, 190], [660, 20], [660, 190], [380, 228]];
+  let s = '<svg viewBox="0 0 760 320" role="img" aria-label="Knowledge graph for ' + name + '">';
+  keys.forEach((k, i) => { s += '<line x1="380" y1="140" x2="' + pos[i][0] + '" y2="' + (pos[i][1] + 30) + '" stroke="#B8C0BA"/>'; });
+  s += '<rect x="300" y="118" width="160" height="44" rx="22" fill="#0F6B5C"/><text x="380" y="145" text-anchor="middle" style="fill:#fff;font-weight:600;font-size:13px">' + name + '</text>';
+  keys.forEach((k, i) => { const p = pos[i], h = 30 + g[k].length * 17;
+    s += '<rect x="' + (p[0] - 90) + '" y="' + p[1] + '" width="180" height="' + h + '" rx="6" fill="#fff" stroke="#B8C0BA"/><text x="' + (p[0] - 80) + '" y="' + (p[1] + 19) +
+      '" style="font-size:11px;fill:#56635E;font-weight:600;letter-spacing:.06em">' + k.toUpperCase() + '</text>' +
+      g[k].map((v, j) => '<text x="' + (p[0] - 80) + '" y="' + (p[1] + 38 + j * 17) + '">' + v + '</text>').join(''); });
+  return s + '</svg>';
+}
+let kgSel = 'NSTEMI';
+function renderMem(tab) {
+  document.querySelectorAll('#mtabs button').forEach((b) => b.setAttribute('aria-selected', b.dataset.m === tab));
+  let h = '';
+  if (tab === 'working') {
+    const led = ALL.flatMap((c) => c.items.filter((i) => i.found && i.pages.length).map((i) => '<tr><td class="code">' + c.code + '</td><td>' + i.label + '</td><td class="n">' + i.pages.join(', ') + '</td></tr>'));
+    h = '<p class="lead">Working memory belongs to one case and is cleared when the job ends. Only the case summary sits in the context all the time. The page map and evidence ledger are stored and queried with tools. Shown for case C-1042.</p>' +
+      '<div class="box" style="margin-bottom:14px"><h3>Case summary · 880 tokens · always in context</h3><p>' + SUMMARY + '</p></div><div class="two"><div><p class="h2">Page map · 60 index cards · 11 shown</p><div class="scroll"><table><tr><th class="n">Page</th><th>Type</th><th>Listed on the card</th></tr>' +
+      Object.keys(CARDS).map((n) => '<tr><td class="n">' + n + '</td><td>' + section(Number(n))[3] + '</td><td>' + Object.values(CARDS[n]).join('; ') + '</td></tr>').join('') +
+      '</table></div></div><div><p class="h2">Evidence ledger · ' + led.length + ' entries</p><div class="scroll"><table><tr><th>Code</th><th>Evidence</th><th class="n">Pages</th></tr>' + led.join('') + '</table></div></div></div>';
+  } else if (tab === 'semantic') {
+    h = '<p class="lead">Semantic memory is the reference code sets. It is read-only, never enters the context whole, and the agent looks up one code at a time.</p><div class="scroll"><table><tr><th>Code</th><th>Code set</th><th>Description</th><th class="n">Lookups in C-1042</th></tr>' +
+      ALL.map((c) => '<tr><td class="code">' + c.code + '</td><td>' + c.sys + '</td><td>' + c.desc + '</td><td class="n">' + (lookups[c.code] || 0) + '</td></tr>').join('') + '</table></div>';
+  } else if (tab === 'procedural') {
+    const skills = [...new Map(ALL.map((c) => [c.skill, c.tok])).entries()];
+    h = '<p class="lead">Procedural memory tells the agent how to work. The ontology says what each value type must have, the knowledge graph says what a condition looks like in a record, and a skill is the playbook that uses both. Only the skill for the code in hand is loaded.</p>' +
+      '<p class="h2">Ontology · required evidence per value type</p><div class="two" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px">' +
+      ONTOLOGY.map((o) => '<div class="box"><h3>' + o[0] + '</h3><ul>' + o[1].map((x) => '<li>' + x + '</li>').join('') + '</ul></div>').join('') + '</div>' +
+      '<p class="h2">Knowledge graph · what a case looks like in the document</p><div class="tabs">' + Object.keys(KG).map((k) => '<button data-kg="' + k + '" aria-selected="' + (k === kgSel) + '">' + k + '</button>').join('') +
+      '</div><div class="gwrap">' + kgSvg(kgSel) + '</div><p class="h2" style="margin-top:14px">Skills</p><div class="scroll"><table><tr><th>Skill</th><th class="n">Size in context</th><th>Version</th></tr>' +
+      skills.map((s) => '<tr><td>' + s[0] + '</td><td class="n">' + s[1] + ' tokens</td><td>v1</td></tr>').join('') + '</table></div>';
+  } else {
+    h = '<p class="lead">Episodic memory is coder feedback. A correction is saved at once as a precedent with a narrow scope. When several coders make the same correction it becomes auto-trusted. An SME only sees conflicts and promotions into skills.</p><div class="scroll"><table><tr><th>ID</th><th>What happened</th><th>Scope</th><th class="n">Cases</th><th class="n">Coders</th><th class="n">Times used</th><th>Status</th></tr>' +
+      liveEp.concat(EPISODES).map((e) => '<tr' + (e.isNew ? ' class="new"' : '') + '><td class="code">' + e.id + '</td><td>' + e.pattern + '</td><td>' + e.scope + '</td><td class="n">' + e.cases + '</td><td class="n">' + e.coders +
+        '</td><td class="n">' + e.used + '</td><td><span class="badge ' + e.cls + '">' + e.status + '</span></td></tr>').join('') + '</table></div>';
+  }
+  $('mbody').innerHTML = h;
+}
+let memTab = 'working';
+$('mtabs').onclick = (e) => { const m = e.target.dataset.m; if (m) { memTab = m; renderMem(m); } };
+$('mbody').onclick = (e) => { const k = e.target.dataset.kg; if (k) { kgSel = k; renderMem('procedural'); } };
+
+/* ---------- views ---------- */
+function show(v) {
+  ['dash', 'case', 'mem'].forEach((k) => { $('v-' + k).hidden = k !== v; });
+  document.querySelectorAll('.nav button').forEach((b) => b.setAttribute('aria-current', b.dataset.v === v));
+  if (v === 'mem') renderMem(memTab); if (v === 'dash') renderDash();
+}
+document.querySelector('.nav').onclick = (e) => { if (e.target.dataset.v) show(e.target.dataset.v); };
+reset(); $('tl').innerHTML = '<li class="empty">Press Run agent. Every node visit, tool call and memory read is listed here.</li>';
+</script>
+</body>
+</html>
