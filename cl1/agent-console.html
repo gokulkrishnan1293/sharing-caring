@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLAIRE agent console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F6F8;--surface:#FFFFFF;--surface-2:#F1F3F6;--line:#E3E6EB;--line-strong:#CBD1DA;
+  --ink:#111827;--muted:#5B6472;--accent:#4F46E5;--accent-ink:#FFFFFF;--accent-soft:#EEF0FF;--accent-line:#C7C9FB;
+  --ok:#15803D;--ok-soft:#E7F6EC;--bad:#B42318;--bad-soft:#FDECEA;--info:#1D4ED8;--info-soft:#E8EFFE;--warn:#B45309;--warn-soft:#FEF3E2;
+  --mark:#FDE68A;--shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+  --c-system:#94A3B8;--c-case:#14B8A6;--c-skill:#8B5CF6;--c-pages:#3B82F6;--c-feedback:#F59E0B;--c-tools:#64748B;--c-reasoning:#EC4899;
+  --p-note:#6366F1;--p-labs:#0EA5E9;--p-imaging:#A855F7;--p-mar:#14B8A6;--p-nursing:#64748B;--p-admin:#CBD5E1;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B0F17;--surface:#121826;--surface-2:#182032;--line:#263044;--line-strong:#344058;
+  --ink:#E6E9EF;--muted:#A3ACBB;--accent:#8B87FF;--accent-ink:#0B0F17;--accent-soft:#1F2147;--accent-line:#3B3E85;
+  --ok:#4ADE80;--ok-soft:#0F2A1A;--bad:#F87171;--bad-soft:#2E1414;--info:#7AA7FF;--info-soft:#14213D;--warn:#FBBF24;--warn-soft:#2D2110;
+  --mark:#6B5410;--shadow:none;--p-admin:#475569;
+}}
+:root[data-theme="dark"]{
+  --bg:#0B0F17;--surface:#121826;--surface-2:#182032;--line:#263044;--line-strong:#344058;
+  --ink:#E6E9EF;--muted:#A3ACBB;--accent:#8B87FF;--accent-ink:#0B0F17;--accent-soft:#1F2147;--accent-line:#3B3E85;
+  --ok:#4ADE80;--ok-soft:#0F2A1A;--bad:#F87171;--bad-soft:#2E1414;--info:#7AA7FF;--info-soft:#14213D;--warn:#FBBF24;--warn-soft:#2D2110;
+  --mark:#6B5410;--shadow:none;--p-admin:#475569;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:0 6px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:14px}
+.logo b{font-weight:700;letter-spacing:.08em}
+.logo small{display:block;font-size:11px;color:var(--muted);letter-spacing:0}
+.nav{display:grid;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 10px;border:0;background:transparent;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:500;text-align:left}
+.nav button:hover{background:var(--surface-2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent)}
+.nav svg{width:18px;height:18px;flex:none}
+.side-foot{margin-top:auto;display:grid;gap:10px;font-size:12px}
+.field{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.input,.select,textarea.input{min-height:36px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 10px;width:100%}
+textarea.input{min-height:64px;resize:vertical}
+.mode{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+.dot.live{background:var(--ok)}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--surface)}
+.topbar h1{font-size:18px;font-weight:600}
+.topbar .grow{flex:1}
+.content{padding:20px 24px 40px;display:grid;gap:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.sm{min-height:30px;padding:0 10px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 16px 0}
+.card-h h2{font-size:14px;font-weight:600}
+.card-h .grow{flex:1}
+.card-b{padding:12px 16px 16px}
+.grid{display:grid;gap:16px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.g-2{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.g-3{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1.15fr)}
+.kpi{padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:12px;font-weight:500;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:var(--surface-2)}
+.scroll{overflow-x:auto}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.b-confirmed,.b-accepted{background:var(--ok-soft);color:var(--ok)}
+.b-unsupported,.b-rejected{background:var(--bad-soft);color:var(--bad)}
+.b-missed,.b-added{background:var(--info-soft);color:var(--info)}
+.b-needs_review,.b-corrected,.b-pending,.b-awaiting_review,.b-running{background:var(--warn-soft);color:var(--warn)}
+.b-reviewed{background:var(--ok-soft);color:var(--ok)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-family:var(--mono)}
+.chip.off{text-decoration:line-through;color:var(--muted)}
+button.chip{cursor:pointer;min-height:26px}
+button.chip:hover{border-color:var(--accent-line)}
+.casehead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.casehead .meta{color:var(--muted);font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg button{min-height:34px;padding:0 10px;border:0;background:var(--surface);cursor:pointer;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.progress{height:4px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.graph{overflow-x:auto}.graph svg{width:100%;min-width:640px;height:auto;display:block}
+.graph text{font:500 12px var(--sans);fill:var(--ink)}
+.graph .sub{font:400 11px var(--sans);fill:var(--muted)}
+.gn rect{fill:var(--surface);stroke:var(--line-strong);stroke-width:1}
+.gn.seen rect{fill:var(--accent-soft);stroke:var(--accent-line)}
+.gn.on rect{fill:var(--accent);stroke:var(--accent)}
+.gn.on text{fill:var(--accent-ink)}
+.gn .cnt{font:500 11px var(--mono);fill:var(--muted)}
+.gn.on .cnt{fill:var(--muted)}
+.ge{fill:none;stroke:var(--line-strong);stroke-width:1.5;marker-end:url(#ah)}
+.ge.on{stroke:var(--accent);stroke-width:2;marker-end:url(#ah2)}
+.gloop{fill:none;stroke:var(--line-strong);stroke-dasharray:5 4}
+.gloop.on{stroke:var(--accent)}
+.gm rect{fill:var(--surface-2);stroke:var(--line-strong);stroke-dasharray:4 3}
+.gm.hit rect{fill:var(--warn-soft);stroke:var(--warn);stroke-dasharray:none}
+.gm.seen rect{stroke:var(--warn)}
+.gl{stroke:var(--line-strong);stroke-dasharray:3 3}
+.gl.on{stroke:var(--warn)}
+@media (prefers-reduced-motion:no-preference){.gn.on rect{animation:pulse 1.2s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.82}}
+.ctx-big{display:flex;align-items:baseline;gap:8px}
+.ctx-big .v{font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:10px 0 12px}
+.stack i{display:block;height:100%;transition:width .25s}
+.legend{display:grid;gap:5px;font-size:13px}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:10px;height:10px;border-radius:3px;flex:none}
+.legend span:last-child{margin-left:auto;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.trace{list-style:none;margin:0;padding:0;max-height:520px;overflow:auto;display:grid;gap:2px;font-size:13px}
+.trace li{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:8px;align-items:baseline;padding:3px 4px;border-radius:6px}
+.trace li.hd{grid-template-columns:1fr;margin-top:8px;padding:6px 4px 2px;font-weight:600;border-top:1px solid var(--line)}
+.trace li.hd:first-child{margin-top:0;border-top:0}
+.trace li.cur{background:var(--accent-soft)}
+.trace .t{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface-2);color:var(--muted);text-align:center}
+.t-llm{background:#FCE7F3!important;color:#9D174D!important}
+.t-tool{background:var(--info-soft)!important;color:var(--info)!important}
+.t-memory{background:var(--warn-soft)!important;color:var(--warn)!important}
+.t-result{background:var(--accent-soft)!important;color:var(--accent)!important}
+:root[data-theme="dark"] .t-llm{background:#3B1229!important;color:#F9A8D4!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .t-llm{background:#3B1229!important;color:#F9A8D4!important}}
+.trace .x{font:12px var(--mono);color:var(--muted);white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}
+.tile{position:relative;aspect-ratio:3/4;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;padding:0;font:500 11px var(--mono);color:var(--muted);overflow:hidden}
+.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--pc)}
+.tile.low{background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 4px,var(--surface) 4px,var(--surface) 8px)}
+.tile.read{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tile.now{box-shadow:0 0 0 2px var(--warn)}
+.tile.sel{box-shadow:0 0 0 2px var(--ink)}
+.pview{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.pview h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.pview dl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 10px;margin:0 0 10px;font-size:13px}
+.pview dt{color:var(--muted)}.pview dd{margin:0}
+.ptext{font-size:13px;line-height:1.6;background:var(--surface-2);border-radius:8px;padding:10px 12px;white-space:pre-wrap}
+mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 2px}
+.finding{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;background:var(--surface)}
+.finding+.finding{margin-top:10px}
+.fh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.fh .code{font:600 14px var(--mono)}
+.fh .desc{color:var(--muted);font-size:13px}
+.fr{font-size:13px}
+.ev{display:grid;gap:4px;font-size:12.5px}
+.ev div{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px;align-items:baseline}
+.ok-i{color:var(--ok)}.bad-i{color:var(--bad)}
+.fmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted)}
+.flag{font-size:12px;color:var(--warn)}
+.form{display:grid;gap:8px;padding:10px;border-radius:8px;background:var(--surface-2)}
+.form .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.err{font-size:12.5px;color:var(--bad)}
+.okmsg{font-size:12.5px;color:var(--ok)}
+.acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);padding:0 16px}
+.tabs button{min-height:42px;padding:0 12px;border:0;background:transparent;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);font-weight:500;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.lead{font-size:13px;color:var(--muted);max-width:90ch;margin-bottom:14px}
+.summary{font-size:14px;line-height:1.65;background:var(--surface-2);border-radius:10px;padding:12px 14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-items:start}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px}
+.box h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.box ul,.box ol{margin:0;padding-left:18px;font-size:13px;display:grid;gap:4px}
+.skill{border:1px solid var(--line);border-radius:10px}
+.skill summary{list-style:none;cursor:pointer;padding:12px;display:grid;gap:4px}
+.skill summary::-webkit-details-marker{display:none}
+.skill .body{padding:0 12px 12px;font-size:13px;white-space:pre-wrap;color:var(--muted);line-height:1.6}
+.sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px}
+.sec:first-child{margin-top:0}
+tr.new td{background:var(--warn-soft)}
+.bars{display:grid;gap:8px;font-size:13px}
+.bars .b{display:grid;grid-template-columns:110px minmax(0,1fr) 40px;gap:10px;align-items:center}
+.bars .t{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bars .t i{display:block;height:100%}
+.list{display:grid;gap:8px;font-size:13px}
+.list .it{display:flex;gap:10px;align-items:baseline}
+.empty{color:var(--muted);font-size:13px}
+.banner{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13px}
+.plegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12px;color:var(--muted)}
+.plegend div{display:flex;align-items:center;gap:6px}.plegend i{width:10px;height:10px;border-radius:3px}
+.rates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+td.nw{white-space:nowrap}
+.searchrow{display:flex;gap:8px;margin-bottom:12px}
+@media (max-width:1180px){.g-3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.g-3>:last-child{grid-column:1/-1}}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;border-right:0;border-bottom:1px solid var(--line);padding:10px 16px;gap:10px}
+  .nav{display:flex;flex-wrap:wrap}.side-foot{margin:0;width:100%;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .g-2,.g-3,.form .row{grid-template-columns:minmax(0,1fr)}
+  .content,.topbar{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><div class="logo-mark" aria-hidden="true">C</div><div><b>CLAIRE</b><small>ER coding agent</small></div></div>
+    <nav class="nav" aria-label="Views">
+      <button data-view="overview" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</button>
+      <button data-view="case" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.5 6h7M7.2 8.2l3.6 7.6M16.8 8.2l-3.6 7.6"/></svg>Agent run</button>
+      <button data-view="memory" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>Memory</button>
+    </nav>
+    <div class="side-foot">
+      <div class="mode" id="modeBox"><span class="dot" id="modeDot"></span><span id="modeText">Sample data</span></div>
+      <label class="field">API address<input class="input mono" id="apiUrl" placeholder="http://localhost:8000" autocomplete="off"></label>
+      <button class="btn sm" id="connect">Connect</button>
+      <label class="field">Coder ID<input class="input" id="coderId" value="coder-demo" autocomplete="off"></label>
+      <button class="btn sm ghost" id="theme" aria-label="Switch colour theme">Switch theme</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1 id="title">Overview</h1>
+      <div class="grow"></div>
+      <label class="field" style="grid-auto-flow:column;align-items:center;gap:8px">Case<select class="select" id="caseSel" style="min-width:180px"></select></label>
+    </header>
+
+    <!-- Overview -->
+    <section class="content" id="v-overview">
+      <div id="ovBanner"></div>
+      <div class="grid g-kpi" id="kpis"></div>
+      <div class="card"><div class="card-h"><h2>Cases</h2><span class="grow"></span><span class="muted" style="font-size:12px">Select a case to open its run</span></div><div class="card-b scroll"><table id="caseTable"></table></div></div>
+      <div class="grid g-2">
+        <div class="card"><div class="card-h"><h2>Findings by bucket</h2></div><div class="card-b"><div class="bars" id="bucketBars"></div></div></div>
+        <div class="card"><div class="card-h"><h2>Cost rates</h2><span class="grow"></span><span class="muted" style="font-size:12px">$ per million tokens</span></div>
+          <div class="card-b"><div class="rates">
+            <label class="field">Input<input class="input mono" type="number" min="0" step="0.01" id="rateIn"></label>
+            <label class="field">Output<input class="input mono" type="number" min="0" step="0.01" id="rateOut"></label></div>
+            <p class="note">Covers the agent's reasoning calls only. Page conversion is billed separately.</p></div></div>
+      </div>
+      <div class="grid g-2">
+        <div class="card"><div class="card-h"><h2>Recent coder corrections</h2></div><div class="card-b"><div class="list" id="recentEp"></div></div></div>
+        <div class="card"><div class="card-h"><h2>Skill drift flags</h2></div><div class="card-b"><div class="list" id="driftList"></div></div></div>
+      </div>
+    </section>
+
+    <!-- Agent run -->
+    <section class="content" id="v-case" hidden>
+      <div class="card"><div class="card-b" style="display:grid;gap:12px">
+        <div class="casehead">
+          <h2 style="font-size:16px;font-weight:600" id="caseTitle"></h2>
+          <span class="badge" id="caseStatus"></span>
+          <span class="meta" id="caseMeta"></span>
+          <span style="flex:1"></span>
+          <button class="btn primary" id="runBtn">Replay run</button>
+          <button class="btn" id="skipBtn">Skip to end</button>
+          <div class="seg" role="group" aria-label="Replay speed" id="speedSeg"><button aria-pressed="true" data-s="1">1x</button><button aria-pressed="false" data-s="2">2x</button><button aria-pressed="false" data-s="4">4x</button></div>
+        </div>
+        <div class="chips" id="claimChips"></div>
+        <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+        <p class="err" id="runErr" hidden></p>
+      </div></div>
+
+      <div class="grid g-2">
+        <div class="card"><div class="card-h"><h2>Agent traversal</h2><span class="grow"></span><span class="muted" style="font-size:12px" id="curCand"></span></div>
+          <div class="card-b graph" id="graph"></div></div>
+        <div class="card"><div class="card-h"><h2>Context right now</h2></div><div class="card-b">
+          <div class="ctx-big"><span class="v" id="ctxNow">0</span><span class="muted">tokens in the model's context</span></div>
+          <div class="stack" id="ctxStack"></div>
+          <div class="legend" id="ctxLegend"></div>
+          <div class="kv" id="runKv"></div>
+          <p class="note" id="ctxNote"></p>
+        </div></div>
+      </div>
+
+      <div class="grid g-3">
+        <div class="card"><div class="card-h"><h2>Trace</h2><span class="grow"></span><span class="muted mono" style="font-size:12px" id="traceCount"></span></div>
+          <div class="card-b"><ul class="trace" id="trace" aria-live="polite"></ul></div></div>
+        <div class="card"><div class="card-h"><h2>Record pages</h2><span class="grow"></span><span class="muted" style="font-size:12px" id="pagesOpened"></span></div>
+          <div class="card-b"><div class="tiles" id="tiles"></div>
+            <div class="plegend" id="pageLegend"></div>
+            <div class="pview" id="pview"><p class="empty">Select a page to see its index card and text. Highlighted text is evidence the agent cited.</p></div></div></div>
+        <div class="card"><div class="card-h"><h2>Findings for coder review</h2><span class="grow"></span><button class="btn sm" id="addMissedBtn">Add missed code</button></div>
+          <div class="card-b"><div id="addMissed" hidden></div><div id="findings"></div></div></div>
+      </div>
+    </section>
+
+    <!-- Memory -->
+    <section class="content" id="v-memory" hidden>
+      <div class="card">
+        <div class="tabs" role="tablist" id="mtabs">
+          <button role="tab" data-m="working" aria-selected="true">Working</button>
+          <button role="tab" data-m="semantic" aria-selected="false">Semantic</button>
+          <button role="tab" data-m="procedural" aria-selected="false">Procedural</button>
+          <button role="tab" data-m="episodic" aria-selected="false">Episodic</button>
+        </div>
+        <div class="card-b" id="mbody" style="padding-top:16px"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script id="sample-data" type="application/json">{"case": {"case_id": "ER-SAMPLE-0001", "setting": "ER", "payer": "Payer A", "claim_codes": [{"code": "I21.4", "code_system": "ICD-10-CM"}, {"code": "E11.65", "code_system": "ICD-10-CM"}, {"code": "93010", "code_system": "CPT"}, {"code": "71046", "code_system": "CPT"}, {"code": "99284", "code_system": "CPT"}], "case_summary": "Adult seen in the emergency department for chest pain of 2 hours (p.2-4). ECG (p.5), serial troponin (p.6) and chest X-ray (p.7) were done; acute coronary syndrome was ruled out (p.10). Low potassium was treated with oral potassium and high glucose with insulin (p.6, 8, 10). History of type 2 diabetes and hypertension (p.3). Final impression lists chest pain, hypokalemia and type 2 diabetes with hyperglycemia; discharged home (p.11).", "status": "awaiting_review", "created_at": "2026-11-18T06:25:37.246263Z", "page_map": [{"page": 1, "date": null, "quality": "low_value", "problems": [], "page_type": "face sheet", "procedures": [], "medications": [], "abnormal_values": []}, {"page": 2, "date": null, "quality": "clean", "problems": ["chest pain"], "page_type": "triage note", "procedures": [], "medications": [], "abnormal_values": ["BP 148/92"]}, {"page": 3, "date": null, "quality": "clean", "problems": ["chest pain", "type 2 diabetes mellitus", "hypertension"], "page_type": "ED physician note", "procedures": [], "medications": ["metformin", "lisinopril"], "abnormal_values": []}, {"page": 4, "date": null, "quality": "clean", "problems": ["chest pain", "rule out acute coronary syndrome"], "page_type": "ED physician note", "procedures": ["ECG", "troponin", "chest X-ray"], "medications": ["aspirin"], "abnormal_values": []}, {"page": 5, "date": null, "quality": "clean", "problems": [], "page_type": "ECG report", "procedures": ["12-lead ECG"], "medications": [], "abnormal_values": []}, {"page": 6, "date": null, "quality": "clean", "problems": [], "page_type": "lab results", "procedures": ["troponin"], "medications": [], "abnormal_values": ["glucose 268 high", "potassium 3.1 low"]}, {"page": 7, "date": null, "quality": "clean", "problems": ["chest pain"], "page_type": "radiology report", "procedures": ["chest X-ray 2 views"], "medications": [], "abnormal_values": []}, {"page": 8, "date": null, "quality": "clean", "problems": [], "page_type": "medication administration record", "procedures": [], "medications": ["aspirin", "potassium chloride", "insulin lispro"], "abnormal_values": []}, {"page": 9, "date": null, "quality": "clean", "problems": [], "page_type": "nursing note", "procedures": ["cardiac monitoring"], "medications": [], "abnormal_values": ["glucose 198"]}, {"page": 10, "date": null, "quality": "clean", "problems": ["chest pain", "acute coronary syndrome ruled out", "hypokalemia", "type 2 diabetes mellitus with hyperglycemia"], "page_type": "ED course", "procedures": [], "medications": ["aspirin", "potassium chloride", "insulin"], "abnormal_values": []}, {"page": 11, "date": null, "quality": "clean", "problems": ["chest pain, unspecified", "hypokalemia", "type 2 diabetes mellitus with hyperglycemia"], "page_type": "final impression", "procedures": [], "medications": [], "abnormal_values": []}, {"page": 12, "date": null, "quality": "low_value", "problems": [], "page_type": "discharge instructions", "procedures": [], "medications": [], "abnormal_values": []}]}, "pages": [{"page_num": 1, "page_text": "SYNTHETIC SAMPLE RECORD. Emergency department face sheet. Patient: Test Patient A. Arrival by private vehicle. Insurance: Payer A.", "card": {"date": null, "quality": "low_value", "problems": [], "page_type": "face sheet", "procedures": [], "medications": [], "abnormal_values": []}}, {"page_num": 2, "page_text": "Triage note. Chief complaint: chest pain for 2 hours. Vitals: BP 148/92, HR 96, RR 18, SpO2 98% on room air, temperature 36.8 C. Pain score 6 of 10.", "card": {"date": null, "quality": "clean", "problems": ["chest pain"], "page_type": "triage note", "procedures": [], "medications": [], "abnormal_values": ["BP 148/92"]}}, {"page_num": 3, "page_text": "ED physician note. History of present illness: 58-year-old with substernal chest pain for 2 hours, non-radiating, no shortness of breath. Past medical history: type 2 diabetes mellitus, hypertension. Home medications: metformin, lisinopril. No known drug allergies.", "card": {"date": null, "quality": "clean", "problems": ["chest pain", "type 2 diabetes mellitus", "hypertension"], "page_type": "ED physician note", "procedures": [], "medications": ["metformin", "lisinopril"], "abnormal_values": []}}, {"page_num": 4, "page_text": "Physical exam: alert, no acute distress. Heart regular rate and rhythm, no murmurs. Lungs clear bilaterally. Chest wall non-tender. Medical decision making: chest pain, rule out acute coronary syndrome. Plan: ECG, serial troponin, chest X-ray, aspirin.", "card": {"date": null, "quality": "clean", "problems": ["chest pain", "rule out acute coronary syndrome"], "page_type": "ED physician note", "procedures": ["ECG", "troponin", "chest X-ray"], "medications": ["aspirin"], "abnormal_values": []}}, {"page_num": 5, "page_text": "12-lead ECG interpretation and report. Normal sinus rhythm at 92 beats per minute. No ST elevation or depression. No acute ischemic changes. Interpreted by the ED physician.", "card": {"date": null, "quality": "clean", "problems": [], "page_type": "ECG report", "procedures": ["12-lead ECG"], "medications": [], "abnormal_values": []}}, {"page_num": 6, "page_text": "Laboratory results. Troponin I at 0 hours: less than 0.01 ng/mL (negative). Troponin I at 3 hours: less than 0.01 ng/mL (negative). Glucose 268 mg/dL (high). Potassium 3.1 mmol/L (low). Sodium 139 mmol/L. Creatinine 0.9 mg/dL.", "card": {"date": null, "quality": "clean", "problems": [], "page_type": "lab results", "procedures": ["troponin"], "medications": [], "abnormal_values": ["glucose 268 high", "potassium 3.1 low"]}}, {"page_num": 7, "page_text": "Radiology report. Chest X-ray, 2 views. Indication: chest pain. Findings: heart size normal, lungs clear. Impression: no acute cardiopulmonary process.", "card": {"date": null, "quality": "clean", "problems": ["chest pain"], "page_type": "radiology report", "procedures": ["chest X-ray 2 views"], "medications": [], "abnormal_values": []}}, {"page_num": 8, "page_text": "Medication administration record. Aspirin 324 mg by mouth, given 10:12. Potassium chloride 40 mEq by mouth, given 11:05. Insulin lispro 6 units subcutaneous, given 11:20.", "card": {"date": null, "quality": "clean", "problems": [], "page_type": "medication administration record", "procedures": [], "medications": ["aspirin", "potassium chloride", "insulin lispro"], "abnormal_values": []}}, {"page_num": 9, "page_text": "Nursing note. Patient resting comfortably. Cardiac monitor in place. Repeat pain score 1 of 10. Blood glucose recheck 198 mg/dL.", "card": {"date": null, "quality": "clean", "problems": [], "page_type": "nursing note", "procedures": ["cardiac monitoring"], "medications": [], "abnormal_values": ["glucose 198"]}}, {"page_num": 10, "page_text": "ED course and reassessment. Chest pain resolved after aspirin. Serial troponin negative and ECG without ischemic changes; acute coronary syndrome ruled out. Hypokalemia repleted with oral potassium chloride. Hyperglycemia treated with insulin; type 2 diabetes mellitus with hyperglycemia, advised to follow up with primary care.", "card": {"date": null, "quality": "clean", "problems": ["chest pain", "acute coronary syndrome ruled out", "hypokalemia", "type 2 diabetes mellitus with hyperglycemia"], "page_type": "ED course", "procedures": [], "medications": ["aspirin", "potassium chloride", "insulin"], "abnormal_values": []}}, {"page_num": 11, "page_text": "Final impression: 1. Chest pain, unspecified. 2. Hypokalemia. 3. Type 2 diabetes mellitus with hyperglycemia. Disposition: discharged home in stable condition. Follow up with primary care in 2 days.", "card": {"date": null, "quality": "clean", "problems": ["chest pain, unspecified", "hypokalemia", "type 2 diabetes mellitus with hyperglycemia"], "page_type": "final impression", "procedures": [], "medications": [], "abnormal_values": []}}, {"page_num": 12, "page_text": "Discharge instructions. Return to the emergency department for worsening chest pain, shortness of breath, or fainting. Take medications as prescribed.", "card": {"date": null, "quality": "low_value", "problems": [], "page_type": "discharge instructions", "procedures": [], "medications": [], "abnormal_values": []}}], "findings": [{"finding_id": 1, "case_id": "ER-SAMPLE-0001", "code": "I21.4", "code_system": "ICD-10-CM", "description": "Non-ST elevation (NSTEMI) myocardial infarction", "kind": "diagnosis", "source": "claim", "bucket": "unsupported", "rationale": "Troponin was negative twice and the provider documents acute coronary syndrome as ruled out. The final impression is chest pain, so the heart attack code is not supported.", "skill_id": "chest_pain_acs", "skill_version": "0.1", "precedent_ids": [3, 2, 1], "pages_read": [6, 10, 11], "flags": [], "review_status": "pending", "created_at": "2026-11-18T06:25:37.318327Z", "evidence": [{"page": 6, "quote": "Troponin I at 3 hours: less than 0.01 ng/mL (negative)", "supports": "tested", "verified": true}, {"page": 10, "quote": "acute coronary syndrome ruled out", "supports": "other", "verified": true}, {"page": 11, "quote": "Chest pain, unspecified", "supports": "provider_statement", "verified": true}]}, {"finding_id": 2, "case_id": "ER-SAMPLE-0001", "code": "E11.65", "code_system": "ICD-10-CM", "description": "Type 2 diabetes mellitus with hyperglycemia", "kind": "diagnosis", "source": "claim", "bucket": "confirmed", "rationale": "The provider documents type 2 diabetes with hyperglycemia, glucose was tested and insulin was given in this visit.", "skill_id": "chronic_condition", "skill_version": "0.1", "precedent_ids": [], "pages_read": [6, 8, 11], "flags": [], "review_status": "pending", "created_at": "2026-11-18T06:25:37.331590Z", "evidence": [{"page": 11, "quote": "Type 2 diabetes mellitus with hyperglycemia", "supports": "provider_statement", "verified": true}, {"page": 6, "quote": "Glucose 268 mg/dL (high)", "supports": "tested", "verified": true}, {"page": 8, "quote": "Insulin lispro 6 units subcutaneous", "supports": "treated", "verified": true}]}, {"finding_id": 3, "case_id": "ER-SAMPLE-0001", "code": "93010", "code_system": "CPT", "description": "ECG 12-lead interpretation and report only (sample wording)", "kind": "service", "source": "claim", "bucket": "confirmed", "rationale": "An ECG interpretation and report from this visit is in the record, done for chest pain.", "skill_id": "diagnostic_service", "skill_version": "0.1", "precedent_ids": [], "pages_read": [5, 11], "flags": [], "review_status": "pending", "created_at": "2026-11-18T06:25:37.341697Z", "evidence": [{"page": 5, "quote": "12-lead ECG interpretation and report", "supports": "performed", "verified": true}, {"page": 11, "quote": "Chest pain, unspecified", "supports": "supporting_diagnosis", "verified": true}]}, {"finding_id": 4, "case_id": "ER-SAMPLE-0001", "code": "71046", "code_system": "CPT", "description": "Chest X-ray 2 views (sample wording)", "kind": "service", "source": "claim", "bucket": "confirmed", "rationale": "The radiology report shows a 2-view chest X-ray done for chest pain.", "skill_id": "diagnostic_service", "skill_version": "0.1", "precedent_ids": [], "pages_read": [7], "flags": [], "review_status": "pending", "created_at": "2026-11-18T06:25:37.352544Z", "evidence": [{"page": 7, "quote": "Chest X-ray, 2 views", "supports": "performed", "verified": true}, {"page": 7, "quote": "Indication: chest pain", "supports": "supporting_diagnosis", "verified": true}]}, {"finding_id": 5, "case_id": "ER-SAMPLE-0001", "code": "R07.9", "code_system": "ICD-10-CM", "description": "Chest pain, unspecified", "kind": "diagnosis", "source": "lead", "bucket": "missed", "rationale": "Chest pain is the provider's final impression and was worked up in this visit; the cardiac cause was ruled out, so the symptom is the reportable diagnosis.", "skill_id": "chest_pain_acs", "skill_version": "0.1", "precedent_ids": [], "pages_read": [2, 5, 11], "flags": [], "review_status": "pending", "created_at": "2026-11-18T06:25:37.373217Z", "evidence": [{"page": 11, "quote": "Chest pain, unspecified", "supports": "provider_statement", "verified": true}, {"page": 2, "quote": "Chief complaint: chest pain for 2 hours", "supports": "evaluated", "verified": true}, {"page": 5, "quote": "No acute ischemic changes", "supports": "tested", "verified": true}]}, {"finding_id": 6, "case_id": "ER-SAMPLE-0001", "code": "E87.6", "code_system": "ICD-10-CM", "description": "Hypokalemia", "kind": "diagnosis", "source": "lead", "bucket": "missed", "rationale": "Low potassium on the lab page, named by the provider and treated with oral potassium.", "skill_id": "electrolyte_abnormality", "skill_version": "0.1", "precedent_ids": [], "pages_read": [6, 8, 10], "flags": [], "review_status": "pending", "created_at": "2026-11-18T06:25:37.387553Z", "evidence": [{"page": 10, "quote": "Hypokalemia repleted with oral potassium chloride", "supports": "provider_statement", "verified": true}, {"page": 6, "quote": "Potassium 3.1 mmol/L (low)", "supports": "tested", "verified": true}, {"page": 8, "quote": "Potassium chloride 40 mEq by mouth", "supports": "treated", "verified": true}]}], "trace": [{"seq": 1, "node": "intake", "kind": "node", "candidate": null, "detail": {"pages": 12, "claim_codes": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.299206Z"}, {"seq": 2, "node": "page_map", "kind": "memory", "candidate": null, "detail": {"cards": 12, "layer": "working"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.299860Z"}, {"seq": 3, "node": "case_summary", "kind": "llm", "candidate": null, "detail": {"step": "roll-up"}, "input_tokens": 333, "output_tokens": 110, "context_tokens": null, "created_at": "2026-11-18T06:25:37.301471Z"}, {"seq": 4, "node": "case_summary", "kind": "memory", "candidate": null, "detail": {"layer": "working", "stored": "case summary"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.302317Z"}, {"seq": 5, "node": "plan", "kind": "result", "candidate": "99284", "detail": {"skipped": "visit-level code, out of scope"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.303295Z"}, {"seq": 6, "node": "plan", "kind": "node", "candidate": null, "detail": {"phase": "verify", "rule_pack": "ER", "candidates": ["I21.4 (ICD-10-CM)", "E11.65 (ICD-10-CM)", "93010 (CPT)", "71046 (CPT)"]}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.303595Z"}, {"seq": 7, "node": "code_loop", "kind": "memory", "candidate": "I21.4 (ICD-10-CM)", "detail": {"layer": "episodic", "precedents": 1, "episode_ids": [3, 2, 1]}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.305926Z"}, {"seq": 8, "node": "code_loop", "kind": "llm", "candidate": "I21.4 (ICD-10-CM)", "detail": {"step": 1, "context": {"case": 190, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1079, "output_tokens": 27, "context_tokens": 1079, "created_at": "2026-11-18T06:25:37.307005Z"}, {"seq": 9, "node": "code_loop", "kind": "memory", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"skill_id": "chest_pain_acs"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 228}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.308191Z"}, {"seq": 10, "node": "code_loop", "kind": "llm", "candidate": "I21.4 (ICD-10-CM)", "detail": {"step": 2, "context": {"case": 190, "skill": 228, "system": 889, "reasoning": 27}, "tool_calls": ["find_pages", "search_text"]}, "input_tokens": 1334, "output_tokens": 58, "context_tokens": 1334, "created_at": "2026-11-18T06:25:37.308970Z"}, {"seq": 11, "node": "code_loop", "kind": "tool", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"term": "troponin"}, "tool": "find_pages", "error": false, "layer": "working", "result_tokens": 47}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.310028Z"}, {"seq": 12, "node": "code_loop", "kind": "tool", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"query": "acute coronary OR myocardial infarction"}, "tool": "search_text", "error": false, "layer": "working", "result_tokens": 110}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.310877Z"}, {"seq": 13, "node": "code_loop", "kind": "llm", "candidate": "I21.4 (ICD-10-CM)", "detail": {"step": 3, "context": {"case": 190, "skill": 228, "tools": 157, "system": 889, "reasoning": 85}, "tool_calls": ["read_page", "read_page", "read_page"]}, "input_tokens": 1549, "output_tokens": 70, "context_tokens": 1549, "created_at": "2026-11-18T06:25:37.311551Z"}, {"seq": 14, "node": "code_loop", "kind": "tool", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"page_num": 6}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 59}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.312390Z"}, {"seq": 15, "node": "code_loop", "kind": "tool", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"page_num": 10}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 84}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.313118Z"}, {"seq": 16, "node": "code_loop", "kind": "tool", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"page_num": 11}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 52}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.313811Z"}, {"seq": 17, "node": "code_loop", "kind": "llm", "candidate": "I21.4 (ICD-10-CM)", "detail": {"step": 4, "context": {"case": 190, "pages": 195, "skill": 228, "tools": 157, "system": 889, "reasoning": 155}, "tool_calls": ["lookup_code"]}, "input_tokens": 1814, "output_tokens": 25, "context_tokens": 1814, "created_at": "2026-11-18T06:25:37.314443Z"}, {"seq": 18, "node": "code_loop", "kind": "memory", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"query": "I21.4"}, "tool": "lookup_code", "error": false, "layer": "semantic", "result_tokens": 29}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.315697Z"}, {"seq": 19, "node": "code_loop", "kind": "llm", "candidate": "I21.4 (ICD-10-CM)", "detail": {"step": 5, "context": {"case": 190, "pages": 195, "skill": 228, "tools": 186, "system": 889, "reasoning": 180}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1868, "output_tokens": 154, "context_tokens": 1868, "created_at": "2026-11-18T06:25:37.316493Z"}, {"seq": 20, "node": "code_loop", "kind": "tool", "candidate": "I21.4 (ICD-10-CM)", "detail": {"args": {"code": "I21.4", "evidence": [{"page": 6, "quote": "Troponin I at 3 hours: less than 0.01 ng/mL (negative)", "supports": "tested"}, {"page": 10, "quote": "acute coronary syndrome ruled out", "supports": "other"}, {"page": 11, "quote": "Chest pain, unspecified", "supports": "provider_statement"}], "rationale": "Troponin was negative twice and the provider documents acute coronary syndrome as ruled out. The final impression is chest pain, so the heart attack code is not supported.", "supported": false, "code_system": "ICD-10-CM"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.317600Z"}, {"seq": 21, "node": "verdict", "kind": "result", "candidate": "I21.4 (ICD-10-CM)", "detail": {"code": "I21.4", "flags": [], "bucket": "unsupported"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.319947Z"}, {"seq": 22, "node": "code_loop", "kind": "llm", "candidate": "E11.65 (ICD-10-CM)", "detail": {"step": 1, "context": {"case": 144, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1033, "output_tokens": 28, "context_tokens": 1033, "created_at": "2026-11-18T06:25:37.322182Z"}, {"seq": 23, "node": "code_loop", "kind": "memory", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"skill_id": "chronic_condition"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 187}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.323065Z"}, {"seq": 24, "node": "code_loop", "kind": "llm", "candidate": "E11.65 (ICD-10-CM)", "detail": {"step": 2, "context": {"case": 144, "skill": 187, "system": 889, "reasoning": 28}, "tool_calls": ["find_pages", "find_pages"]}, "input_tokens": 1248, "output_tokens": 49, "context_tokens": 1248, "created_at": "2026-11-18T06:25:37.323729Z"}, {"seq": 25, "node": "code_loop", "kind": "tool", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"term": "diabetes"}, "tool": "find_pages", "error": false, "layer": "working", "result_tokens": 70}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.324575Z"}, {"seq": 26, "node": "code_loop", "kind": "tool", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"term": "insulin"}, "tool": "find_pages", "error": false, "layer": "working", "result_tokens": 51}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.325276Z"}, {"seq": 27, "node": "code_loop", "kind": "llm", "candidate": "E11.65 (ICD-10-CM)", "detail": {"step": 3, "context": {"case": 144, "skill": 187, "tools": 121, "system": 889, "reasoning": 77}, "tool_calls": ["read_page", "read_page", "read_page"]}, "input_tokens": 1418, "output_tokens": 70, "context_tokens": 1418, "created_at": "2026-11-18T06:25:37.325881Z"}, {"seq": 28, "node": "code_loop", "kind": "tool", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"page_num": 6}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 59}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.326537Z"}, {"seq": 29, "node": "code_loop", "kind": "tool", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"page_num": 8}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 45}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.327239Z"}, {"seq": 30, "node": "code_loop", "kind": "tool", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"page_num": 11}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 52}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.327813Z"}, {"seq": 31, "node": "code_loop", "kind": "llm", "candidate": "E11.65 (ICD-10-CM)", "detail": {"step": 4, "context": {"case": 144, "pages": 156, "skill": 187, "tools": 121, "system": 889, "reasoning": 147}, "tool_calls": ["lookup_code"]}, "input_tokens": 1644, "output_tokens": 25, "context_tokens": 1644, "created_at": "2026-11-18T06:25:37.328447Z"}, {"seq": 32, "node": "code_loop", "kind": "memory", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"query": "E11.65"}, "tool": "lookup_code", "error": false, "layer": "semantic", "result_tokens": 28}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.329359Z"}, {"seq": 33, "node": "code_loop", "kind": "llm", "candidate": "E11.65 (ICD-10-CM)", "detail": {"step": 5, "context": {"case": 144, "pages": 156, "skill": 187, "tools": 149, "system": 889, "reasoning": 172}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1697, "output_tokens": 138, "context_tokens": 1697, "created_at": "2026-11-18T06:25:37.330101Z"}, {"seq": 34, "node": "code_loop", "kind": "tool", "candidate": "E11.65 (ICD-10-CM)", "detail": {"args": {"code": "E11.65", "evidence": [{"page": 11, "quote": "Type 2 diabetes mellitus with hyperglycemia", "supports": "provider_statement"}, {"page": 6, "quote": "Glucose 268 mg/dL (high)", "supports": "tested"}, {"page": 8, "quote": "Insulin lispro 6 units subcutaneous", "supports": "treated"}], "rationale": "The provider documents type 2 diabetes with hyperglycemia, glucose was tested and insulin was given in this visit.", "supported": true, "code_system": "ICD-10-CM"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.331026Z"}, {"seq": 35, "node": "verdict", "kind": "result", "candidate": "E11.65 (ICD-10-CM)", "detail": {"code": "E11.65", "flags": [], "bucket": "confirmed"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.332594Z"}, {"seq": 36, "node": "code_loop", "kind": "llm", "candidate": "93010 (CPT)", "detail": {"step": 1, "context": {"case": 146, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1035, "output_tokens": 28, "context_tokens": 1035, "created_at": "2026-11-18T06:25:37.334263Z"}, {"seq": 37, "node": "code_loop", "kind": "memory", "candidate": "93010 (CPT)", "detail": {"args": {"skill_id": "diagnostic_service"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 167}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.335014Z"}, {"seq": 38, "node": "code_loop", "kind": "llm", "candidate": "93010 (CPT)", "detail": {"step": 2, "context": {"case": 146, "skill": 167, "system": 889, "reasoning": 28}, "tool_calls": ["find_pages"]}, "input_tokens": 1230, "output_tokens": 24, "context_tokens": 1230, "created_at": "2026-11-18T06:25:37.335596Z"}, {"seq": 39, "node": "code_loop", "kind": "tool", "candidate": "93010 (CPT)", "detail": {"args": {"term": "ECG"}, "tool": "find_pages", "error": false, "layer": "working", "result_tokens": 50}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.336400Z"}, {"seq": 40, "node": "code_loop", "kind": "llm", "candidate": "93010 (CPT)", "detail": {"step": 3, "context": {"case": 146, "skill": 167, "tools": 50, "system": 889, "reasoning": 52}, "tool_calls": ["read_page", "read_page"]}, "input_tokens": 1304, "output_tokens": 47, "context_tokens": 1304, "created_at": "2026-11-18T06:25:37.337007Z"}, {"seq": 41, "node": "code_loop", "kind": "tool", "candidate": "93010 (CPT)", "detail": {"args": {"page_num": 5}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 45}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.337650Z"}, {"seq": 42, "node": "code_loop", "kind": "tool", "candidate": "93010 (CPT)", "detail": {"args": {"page_num": 11}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 52}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.338167Z"}, {"seq": 43, "node": "code_loop", "kind": "llm", "candidate": "93010 (CPT)", "detail": {"step": 4, "context": {"case": 146, "pages": 97, "skill": 167, "tools": 50, "system": 889, "reasoning": 99}, "tool_calls": ["lookup_code"]}, "input_tokens": 1448, "output_tokens": 25, "context_tokens": 1448, "created_at": "2026-11-18T06:25:37.338701Z"}, {"seq": 44, "node": "code_loop", "kind": "memory", "candidate": "93010 (CPT)", "detail": {"args": {"query": "93010"}, "tool": "lookup_code", "error": false, "layer": "semantic", "result_tokens": 30}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.339559Z"}, {"seq": 45, "node": "code_loop", "kind": "llm", "candidate": "93010 (CPT)", "detail": {"step": 5, "context": {"case": 146, "pages": 97, "skill": 167, "tools": 80, "system": 889, "reasoning": 124}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1503, "output_tokens": 108, "context_tokens": 1503, "created_at": "2026-11-18T06:25:37.340136Z"}, {"seq": 46, "node": "code_loop", "kind": "tool", "candidate": "93010 (CPT)", "detail": {"args": {"code": "93010", "evidence": [{"page": 5, "quote": "12-lead ECG interpretation and report", "supports": "performed"}, {"page": 11, "quote": "Chest pain, unspecified", "supports": "supporting_diagnosis"}], "rationale": "An ECG interpretation and report from this visit is in the record, done for chest pain.", "supported": true, "code_system": "CPT"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.341053Z"}, {"seq": 47, "node": "verdict", "kind": "result", "candidate": "93010 (CPT)", "detail": {"code": "93010", "flags": [], "bucket": "confirmed"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.342379Z"}, {"seq": 48, "node": "code_loop", "kind": "llm", "candidate": "71046 (CPT)", "detail": {"step": 1, "context": {"case": 140, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1029, "output_tokens": 28, "context_tokens": 1029, "created_at": "2026-11-18T06:25:37.344054Z"}, {"seq": 49, "node": "code_loop", "kind": "memory", "candidate": "71046 (CPT)", "detail": {"args": {"skill_id": "diagnostic_service"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 167}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.344844Z"}, {"seq": 50, "node": "code_loop", "kind": "llm", "candidate": "71046 (CPT)", "detail": {"step": 2, "context": {"case": 140, "skill": 167, "system": 889, "reasoning": 28}, "tool_calls": ["find_pages"]}, "input_tokens": 1224, "output_tokens": 26, "context_tokens": 1224, "created_at": "2026-11-18T06:25:37.345430Z"}, {"seq": 51, "node": "code_loop", "kind": "tool", "candidate": "71046 (CPT)", "detail": {"args": {"term": "chest x-ray"}, "tool": "find_pages", "error": false, "layer": "working", "result_tokens": 49}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.346183Z"}, {"seq": 52, "node": "code_loop", "kind": "llm", "candidate": "71046 (CPT)", "detail": {"step": 3, "context": {"case": 140, "skill": 167, "tools": 49, "system": 889, "reasoning": 54}, "tool_calls": ["read_page"]}, "input_tokens": 1299, "output_tokens": 23, "context_tokens": 1299, "created_at": "2026-11-18T06:25:37.346781Z"}, {"seq": 53, "node": "code_loop", "kind": "tool", "candidate": "71046 (CPT)", "detail": {"args": {"page_num": 7}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 40}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.347361Z"}, {"seq": 54, "node": "code_loop", "kind": "llm", "candidate": "71046 (CPT)", "detail": {"step": 4, "context": {"case": 140, "pages": 40, "skill": 167, "tools": 49, "system": 889, "reasoning": 77}, "tool_calls": ["lookup_code"]}, "input_tokens": 1362, "output_tokens": 25, "context_tokens": 1362, "created_at": "2026-11-18T06:25:37.347988Z"}, {"seq": 55, "node": "code_loop", "kind": "memory", "candidate": "71046 (CPT)", "detail": {"args": {"query": "71046"}, "tool": "lookup_code", "error": false, "layer": "semantic", "result_tokens": 24}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.349111Z"}, {"seq": 56, "node": "code_loop", "kind": "llm", "candidate": "71046 (CPT)", "detail": {"step": 5, "context": {"case": 140, "pages": 40, "skill": 167, "tools": 73, "system": 889, "reasoning": 102}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1411, "output_tokens": 99, "context_tokens": 1411, "created_at": "2026-11-18T06:25:37.350832Z"}, {"seq": 57, "node": "code_loop", "kind": "tool", "candidate": "71046 (CPT)", "detail": {"args": {"code": "71046", "evidence": [{"page": 7, "quote": "Chest X-ray, 2 views", "supports": "performed"}, {"page": 7, "quote": "Indication: chest pain", "supports": "supporting_diagnosis"}], "rationale": "The radiology report shows a 2-view chest X-ray done for chest pain.", "supported": true, "code_system": "CPT"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.351931Z"}, {"seq": 58, "node": "verdict", "kind": "result", "candidate": "71046 (CPT)", "detail": {"code": "71046", "flags": [], "bucket": "confirmed"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.353738Z"}, {"seq": 59, "node": "discover", "kind": "llm", "candidate": null, "detail": {"handled": 4}, "input_tokens": 534, "output_tokens": 126, "context_tokens": null, "created_at": "2026-11-18T06:25:37.356140Z"}, {"seq": 60, "node": "discover", "kind": "node", "candidate": null, "detail": {"leads": ["chest pain", "hypokalemia", "hypertension"]}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.356589Z"}, {"seq": 61, "node": "code_loop", "kind": "llm", "candidate": "chest pain", "detail": {"step": 1, "context": {"case": 165, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1054, "output_tokens": 27, "context_tokens": 1054, "created_at": "2026-11-18T06:25:37.360038Z"}, {"seq": 62, "node": "code_loop", "kind": "memory", "candidate": "chest pain", "detail": {"args": {"skill_id": "chest_pain_acs"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 228}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.360996Z"}, {"seq": 63, "node": "code_loop", "kind": "llm", "candidate": "chest pain", "detail": {"step": 2, "context": {"case": 165, "skill": 228, "system": 889, "reasoning": 27}, "tool_calls": ["read_page", "read_page", "read_page"]}, "input_tokens": 1309, "output_tokens": 70, "context_tokens": 1309, "created_at": "2026-11-18T06:25:37.361766Z"}, {"seq": 64, "node": "code_loop", "kind": "tool", "candidate": "chest pain", "detail": {"args": {"page_num": 2}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 39}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.362563Z"}, {"seq": 65, "node": "code_loop", "kind": "tool", "candidate": "chest pain", "detail": {"args": {"page_num": 5}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 45}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.363421Z"}, {"seq": 66, "node": "code_loop", "kind": "tool", "candidate": "chest pain", "detail": {"args": {"page_num": 11}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 52}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.364269Z"}, {"seq": 67, "node": "code_loop", "kind": "llm", "candidate": "chest pain", "detail": {"step": 3, "context": {"case": 165, "pages": 136, "skill": 228, "system": 889, "reasoning": 97}, "tool_calls": ["lookup_code"]}, "input_tokens": 1515, "output_tokens": 29, "context_tokens": 1515, "created_at": "2026-11-18T06:25:37.365069Z"}, {"seq": 68, "node": "code_loop", "kind": "memory", "candidate": "chest pain", "detail": {"args": {"query": "chest pain unspecified"}, "tool": "lookup_code", "error": false, "layer": "semantic", "result_tokens": 23}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.367448Z"}, {"seq": 69, "node": "code_loop", "kind": "llm", "candidate": "chest pain", "detail": {"step": 4, "context": {"case": 165, "pages": 136, "skill": 228, "tools": 23, "system": 889, "reasoning": 126}, "tool_calls": ["get_precedents"]}, "input_tokens": 1567, "output_tokens": 32, "context_tokens": 1567, "created_at": "2026-11-18T06:25:37.368180Z"}, {"seq": 70, "node": "code_loop", "kind": "memory", "candidate": "chest pain", "detail": {"args": {"code": "R07.9", "code_system": "ICD-10-CM"}, "tool": "get_precedents", "error": false, "layer": "episodic", "result_tokens": 11}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.369657Z"}, {"seq": 71, "node": "code_loop", "kind": "llm", "candidate": "chest pain", "detail": {"step": 5, "context": {"case": 165, "pages": 136, "skill": 228, "tools": 23, "system": 889, "feedback": 11, "reasoning": 158}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1610, "output_tokens": 145, "context_tokens": 1610, "created_at": "2026-11-18T06:25:37.370402Z"}, {"seq": 72, "node": "code_loop", "kind": "tool", "candidate": "chest pain", "detail": {"args": {"code": "R07.9", "evidence": [{"page": 11, "quote": "Chest pain, unspecified", "supports": "provider_statement"}, {"page": 2, "quote": "Chief complaint: chest pain for 2 hours", "supports": "evaluated"}, {"page": 5, "quote": "No acute ischemic changes", "supports": "tested"}], "rationale": "Chest pain is the provider's final impression and was worked up in this visit; the cardiac cause was ruled out, so the symptom is the reportable diagnosis.", "supported": true, "code_system": "ICD-10-CM"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.371450Z"}, {"seq": 73, "node": "verdict", "kind": "result", "candidate": "chest pain", "detail": {"code": "R07.9", "flags": [], "bucket": "missed"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.374652Z"}, {"seq": 74, "node": "code_loop", "kind": "llm", "candidate": "hypokalemia", "detail": {"step": 1, "context": {"case": 163, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1052, "output_tokens": 30, "context_tokens": 1052, "created_at": "2026-11-18T06:25:37.376080Z"}, {"seq": 75, "node": "code_loop", "kind": "memory", "candidate": "hypokalemia", "detail": {"args": {"skill_id": "electrolyte_abnormality"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 157}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.377173Z"}, {"seq": 76, "node": "code_loop", "kind": "llm", "candidate": "hypokalemia", "detail": {"step": 2, "context": {"case": 163, "skill": 157, "system": 889, "reasoning": 30}, "tool_calls": ["read_page", "read_page", "read_page"]}, "input_tokens": 1239, "output_tokens": 70, "context_tokens": 1239, "created_at": "2026-11-18T06:25:37.377918Z"}, {"seq": 77, "node": "code_loop", "kind": "tool", "candidate": "hypokalemia", "detail": {"args": {"page_num": 6}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 59}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.378824Z"}, {"seq": 78, "node": "code_loop", "kind": "tool", "candidate": "hypokalemia", "detail": {"args": {"page_num": 8}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 45}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.379607Z"}, {"seq": 79, "node": "code_loop", "kind": "tool", "candidate": "hypokalemia", "detail": {"args": {"page_num": 10}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 84}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.380534Z"}, {"seq": 80, "node": "code_loop", "kind": "llm", "candidate": "hypokalemia", "detail": {"step": 3, "context": {"case": 163, "pages": 188, "skill": 157, "system": 889, "reasoning": 100}, "tool_calls": ["lookup_code"]}, "input_tokens": 1497, "output_tokens": 26, "context_tokens": 1497, "created_at": "2026-11-18T06:25:37.381407Z"}, {"seq": 81, "node": "code_loop", "kind": "memory", "candidate": "hypokalemia", "detail": {"args": {"query": "hypokalemia"}, "tool": "lookup_code", "error": false, "layer": "semantic", "result_tokens": 20}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.382935Z"}, {"seq": 82, "node": "code_loop", "kind": "llm", "candidate": "hypokalemia", "detail": {"step": 4, "context": {"case": 163, "pages": 188, "skill": 157, "tools": 20, "system": 889, "reasoning": 126}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1543, "output_tokens": 133, "context_tokens": 1543, "created_at": "2026-11-18T06:25:37.384203Z"}, {"seq": 83, "node": "code_loop", "kind": "tool", "candidate": "hypokalemia", "detail": {"args": {"code": "E87.6", "evidence": [{"page": 10, "quote": "Hypokalemia repleted with oral potassium chloride", "supports": "provider_statement"}, {"page": 6, "quote": "Potassium 3.1 mmol/L (low)", "supports": "tested"}, {"page": 8, "quote": "Potassium chloride 40 mEq by mouth", "supports": "treated"}], "rationale": "Low potassium on the lab page, named by the provider and treated with oral potassium.", "supported": true, "code_system": "ICD-10-CM"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.385583Z"}, {"seq": 84, "node": "verdict", "kind": "result", "candidate": "hypokalemia", "detail": {"code": "E87.6", "flags": [], "bucket": "missed"}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.388869Z"}, {"seq": 85, "node": "code_loop", "kind": "llm", "candidate": "hypertension", "detail": {"step": 1, "context": {"case": 156, "system": 889}, "tool_calls": ["load_skill"]}, "input_tokens": 1045, "output_tokens": 28, "context_tokens": 1045, "created_at": "2026-11-18T06:25:37.390274Z"}, {"seq": 86, "node": "code_loop", "kind": "memory", "candidate": "hypertension", "detail": {"args": {"skill_id": "chronic_condition"}, "tool": "load_skill", "error": false, "layer": "procedural", "result_tokens": 187}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.392582Z"}, {"seq": 87, "node": "code_loop", "kind": "llm", "candidate": "hypertension", "detail": {"step": 2, "context": {"case": 156, "skill": 187, "system": 889, "reasoning": 28}, "tool_calls": ["search_text"]}, "input_tokens": 1260, "output_tokens": 30, "context_tokens": 1260, "created_at": "2026-11-18T06:25:37.393454Z"}, {"seq": 88, "node": "code_loop", "kind": "tool", "candidate": "hypertension", "detail": {"args": {"query": "hypertension OR lisinopril"}, "tool": "search_text", "error": false, "layer": "working", "result_tokens": 53}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.394417Z"}, {"seq": 89, "node": "code_loop", "kind": "llm", "candidate": "hypertension", "detail": {"step": 3, "context": {"case": 156, "skill": 187, "tools": 53, "system": 889, "reasoning": 58}, "tool_calls": ["read_page", "read_page"]}, "input_tokens": 1343, "output_tokens": 47, "context_tokens": 1343, "created_at": "2026-11-18T06:25:37.395147Z"}, {"seq": 90, "node": "code_loop", "kind": "tool", "candidate": "hypertension", "detail": {"args": {"page_num": 3}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 68}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.395920Z"}, {"seq": 91, "node": "code_loop", "kind": "tool", "candidate": "hypertension", "detail": {"args": {"page_num": 11}, "tool": "read_page", "error": false, "layer": "working", "result_tokens": 52}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.396513Z"}, {"seq": 92, "node": "code_loop", "kind": "llm", "candidate": "hypertension", "detail": {"step": 4, "context": {"case": 156, "pages": 120, "skill": 187, "tools": 53, "system": 889, "reasoning": 105}, "tool_calls": ["submit_verdict"]}, "input_tokens": 1510, "output_tokens": 109, "context_tokens": 1510, "created_at": "2026-11-18T06:25:37.397116Z"}, {"seq": 93, "node": "code_loop", "kind": "tool", "candidate": "hypertension", "detail": {"args": {"code": "I10", "evidence": [{"page": 3, "quote": "Past medical history: type 2 diabetes mellitus, hypertension", "supports": "other"}], "rationale": "Hypertension appears only in the past history and home medication list. It was not assessed or treated in this visit and is not in the final impression.", "supported": false, "code_system": "ICD-10-CM"}, "tool": "submit_verdict", "error": false, "layer": "working", "result_tokens": 5}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.397934Z"}, {"seq": 94, "node": "verdict", "kind": "result", "candidate": "hypertension", "detail": {"code": "I10", "dropped": "lead not supported", "rationale": "Hypertension appears only in the past history and home medication list. It was not assessed or treated in this visit and is not in the final impression."}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.398561Z"}, {"seq": 95, "node": "coder_review", "kind": "result", "candidate": null, "detail": {"findings": {"missed": 2, "confirmed": 3, "unsupported": 1}}, "input_tokens": 0, "output_tokens": 0, "context_tokens": null, "created_at": "2026-11-18T06:25:37.400861Z"}], "case_stats": {"case_id": "ER-SAMPLE-0001", "pages": 12, "pages_opened": 8, "record_tokens_estimate": 580, "peak_context_tokens": 1868, "peak_context_share_of_record": 3.221, "input_tokens": 45940, "output_tokens": 2089, "model_calls": 35, "tool_calls": 45, "reasoning_cost": 0.0, "findings": {"confirmed": 3, "missed": 2, "unsupported": 1}}, "stats": {"cases": 1, "pages": 12, "reasoning_cost": 0.0, "findings": {"confirmed": 3, "missed": 2, "unsupported": 1}, "episodes": 3, "per_case": [{"case_id": "ER-SAMPLE-0001", "pages": 12, "pages_opened": 8, "record_tokens_estimate": 580, "peak_context_tokens": 1868, "peak_context_share_of_record": 3.221, "input_tokens": 45940, "output_tokens": 2089, "model_calls": 35, "tool_calls": 45, "reasoning_cost": 0.0, "findings": {"confirmed": 3, "missed": 2, "unsupported": 1}}]}, "skills": [{"skill_id": "chest_pain_acs", "version": "0.1", "title": "Chest pain and acute coronary syndrome", "description": "Chest pain presentations, including suspected or confirmed heart attack and unstable angina", "applies_to": ["I20", "I21", "I24", "R07"], "drift_flag_count": 0, "body": "Draft for SME review.\n\nEvidence to look for\n- The provider's final impression: does it name a cardiac diagnosis, or only chest pain?\n- ECG interpretation and troponin results, and whether the provider calls them positive or negative.\n- Treatment and disposition: cardiology consult, catheterization, admission or transfer, or discharge home.\n\nHow to decide\n- A heart attack or unstable angina code needs the provider to state that diagnosis as confirmed.\n- If the workup was to rule it out and the provider's impression is chest pain, the cardiac code is not supported and the chest pain symptom code is the reportable diagnosis.\n- Choose the chest pain code that matches the provider's wording; use lookup_code to see the options.\n\nWhere it usually is\n- ED physician note, ED course or reassessment, final impression, lab results, ECG report."}, {"skill_id": "chronic_condition", "version": "0.1", "title": "Chronic condition addressed in the visit", "description": "Long-term conditions such as diabetes, hypertension, kidney disease or COPD seen during an ER visit", "applies_to": ["E08", "E09", "E10", "E11", "E13", "I10", "I11", "I12", "I13", "N18", "J44", "J45", "E03", "E78"], "drift_flag_count": 0, "body": "Draft for SME review.\n\nEvidence to look for\n- The provider documents the condition in the assessment, ED course or final impression, not only in the history.\n- It was addressed in this visit: a test for it, a treatment given, a medication changed or held, or it changed the plan.\n- Wording that changes the code, for example a documented complication or \"with hyperglycemia\".\n\nHow to decide\n- History or home medication list only: not supported.\n- Addressed and documented by the provider: supported, at the specificity the provider's wording supports.\n\nWhere it usually is\n- History and physical, lab results, medication administration record, ED course, final impression."}, {"skill_id": "diagnostic_service", "version": "0.1", "title": "Diagnostic services", "description": "ECG, X-ray, CT, ultrasound and other tests billed as services", "applies_to": ["CPT 7xxxx", "CPT 93xxx", "HCPCS"], "drift_flag_count": 0, "body": "Draft for SME review.\n\nEvidence to look for\n- A report or interpretation for the test from this visit, matching what the code describes (for example the number of views).\n- An order or indication for the test.\n- A documented diagnosis or symptom that justifies it.\n\nHow to decide\n- No report or interpretation in the record: not supported.\n- Report present but it describes a different test than the code: not supported; say what the record does support.\n- Report present and a justifying diagnosis or symptom is documented: supported.\n\nWhere it usually is\n- Radiology report, ECG report, ED physician note, orders."}, {"skill_id": "electrolyte_abnormality", "version": "0.1", "title": "Electrolyte and fluid abnormalities", "description": "Low or high potassium, sodium and similar findings, including dehydration", "applies_to": ["E86", "E87"], "drift_flag_count": 0, "body": "Draft for SME review.\n\nEvidence to look for\n- The abnormal value on a lab page.\n- The provider names the condition (for example hypokalemia) in the ED course or final impression.\n- Treatment or monitoring for it: replacement given, fluids, a repeat level, or a change in plan.\n\nHow to decide\n- An abnormal value with no provider documentation of the condition is not supported.\n- Value plus provider documentation plus treatment or monitoring: supported.\n\nWhere it usually is\n- Lab results, medication administration record, ED course, final impression."}, {"skill_id": "infection_fever", "version": "0.1", "title": "Fever and infection", "description": "Fever, suspected or confirmed infection such as pneumonia, urinary infection or sepsis", "applies_to": ["R50", "A41", "J18", "N39", "J06", "L03"], "drift_flag_count": 0, "body": "Draft for SME review.\n\nEvidence to look for\n- The provider's final impression: a named infection, or fever alone.\n- Test results the provider relies on, such as cultures, urinalysis or chest imaging.\n- Treatment: antibiotics given or prescribed, fluids, admission.\n\nHow to decide\n- \"Rule out sepsis\" or \"possible pneumonia\" is not a confirmed infection in this setting; the documented symptom is coded.\n- When the provider confirms the source of the fever, the infection is the diagnosis and fever is not reported separately as its symptom.\n\nWhere it usually is\n- ED physician note, lab results, radiology report, medication administration record, final impression."}, {"skill_id": "injury_wound", "version": "0.1", "title": "Injuries and wound care", "description": "Lacerations, fractures, sprains and the repair or splinting done for them", "applies_to": ["S00-S99", "T07-T14", "CPT 12xxx", "CPT 13xxx", "CPT 29xxx"], "drift_flag_count": 0, "body": "Draft for SME review.\n\nEvidence to look for\n- The provider documents the injury with its site and side.\n- Imaging results when a fracture is coded, as interpreted by the provider or radiologist.\n- A procedure note for any repair or splint: site, size or length, and what was done.\n\nHow to decide\n- The injury code needs the site and side the documentation gives; do not assume a side.\n- A repair or splint service needs a procedure note from this visit; a plan to repair is not enough.\n\nWhere it usually is\n- ED physician note, procedure note, radiology report, final impression."}], "episodes": [{"episode_id": 3, "setting": "ER", "payer": "Payer A", "code": "I21.4", "code_system": "ICD-10-CM", "code_family": "I21", "agent_bucket": "confirmed", "decision": "rejected", "corrected_code": null, "reason": "uncertain_diagnosis", "root_cause": "agent_reasoning", "note": null, "skill_id": null, "skill_version": null, "coder_id": "coder-1", "case_hash": "c965167a8ac2962a", "created_at": "2026-11-18T06:25:37.245585Z"}, {"episode_id": 2, "setting": "ER", "payer": "Payer A", "code": "I21.4", "code_system": "ICD-10-CM", "code_family": "I21", "agent_bucket": "confirmed", "decision": "rejected", "corrected_code": null, "reason": "uncertain_diagnosis", "root_cause": "agent_reasoning", "note": null, "skill_id": null, "skill_version": null, "coder_id": "coder-2", "case_hash": "9f95e0b31d71126f", "created_at": "2026-11-18T06:25:37.245126Z"}, {"episode_id": 1, "setting": "ER", "payer": "Payer A", "code": "I21.4", "code_system": "ICD-10-CM", "code_family": "I21", "agent_bucket": "confirmed", "decision": "rejected", "corrected_code": null, "reason": "uncertain_diagnosis", "root_cause": "agent_reasoning", "note": null, "skill_id": null, "skill_version": null, "coder_id": "coder-1", "case_hash": "d8866800f93f23de", "created_at": "2026-11-18T06:25:37.244402Z"}], "rule_pack": "ER rule pack (outpatient rules). Draft for SME review.\n\n1. Start from the treating provider's final impression or diagnosis. Code only what the provider documented.\n2. Uncertain diagnoses are not coded in this setting. If the provider wrote \"possible\", \"probable\", \"suspected\", \"rule out\" or \"ruled out\", the condition is not supported; the documented sign or symptom is coded instead.\n3. A diagnosis is supported only if it was addressed in this visit: evaluated, tested, treated, or it changed management. A condition that appears only in the history or medication list is not supported.\n4. An abnormal lab or imaging result alone is not a diagnosis. The provider must document the condition or its clinical significance.\n5. Never judge a lab, imaging or nursing page alone. Read the provider's assessment or final impression page with it.\n6. A service is supported only if a report or note shows it was performed in this visit and a documented diagnosis or symptom justifies it.\n7. Use the most specific code the documentation supports, and confirm it exists with lookup_code.\n8. Visit-level (evaluation and management) codes are out of scope.", "ontology": {"value_types": {"diagnosis": {"require_all": ["provider_statement"], "require_any": ["evaluated", "tested", "treated", "management"], "meaning": {"provider_statement": "the treating provider documents the diagnosis", "evaluated": "history or exam findings for the condition in this visit", "tested": "a test ordered or reviewed for the condition", "treated": "a drug, procedure or other treatment given for it", "management": "it changed the plan, prescription, referral or disposition"}}, "service": {"require_all": ["performed"], "require_any": ["supporting_diagnosis"], "meaning": {"performed": "a report or note shows the service was done in this visit", "supporting_diagnosis": "a documented diagnosis or symptom that justifies the service"}}}}, "codes": [{"code": "71046", "code_system": "CPT", "description": "Chest X-ray 2 views (sample wording)"}, {"code": "93010", "code_system": "CPT", "description": "ECG 12-lead interpretation and report only (sample wording)"}, {"code": "99284", "code_system": "CPT", "description": "Emergency department visit level 4 (sample wording)"}, {"code": "E11.65", "code_system": "ICD-10-CM", "description": "Type 2 diabetes mellitus with hyperglycemia"}, {"code": "E11.9", "code_system": "ICD-10-CM", "description": "Type 2 diabetes mellitus without complications"}, {"code": "E87.6", "code_system": "ICD-10-CM", "description": "Hypokalemia"}, {"code": "I10", "code_system": "ICD-10-CM", "description": "Essential (primary) hypertension"}, {"code": "I20.0", "code_system": "ICD-10-CM", "description": "Unstable angina"}, {"code": "I21.4", "code_system": "ICD-10-CM", "description": "Non-ST elevation (NSTEMI) myocardial infarction"}, {"code": "R07.89", "code_system": "ICD-10-CM", "description": "Other chest pain"}, {"code": "R07.9", "code_system": "ICD-10-CM", "description": "Chest pain, unspecified"}]}
+</script>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const usd = (n) => "$" + Number(n || 0).toFixed(4);
+const store = { get(k, d) { try { const v = localStorage.getItem("claire." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("claire." + k, JSON.stringify(v)); } catch {} } };
+
+const BUCKET_LABEL = { confirmed: "Confirmed", unsupported: "Lacks support", missed: "Missed by claim", needs_review: "Needs review" };
+const REVIEW_LABEL = { pending: "Pending review", accepted: "Accepted", rejected: "Rejected", corrected: "Corrected", added: "Added by coder" };
+const REASONS = { insufficient_documentation: "Insufficient documentation", history_only: "History only, not addressed", uncertain_diagnosis: "Uncertain or ruled-out diagnosis",
+  wrong_specificity: "Wrong specificity", payer_rule: "Payer rule", not_clinically_valid: "Not clinically valid", missed_by_agent: "Missed by the agent", other: "Other" };
+const REASON_TEXT = { insufficient_documentation: "the documentation did not support the code", history_only: "the condition was only in the history and was not addressed in the visit",
+  uncertain_diagnosis: "the diagnosis was uncertain or ruled out, so the symptom is coded instead", wrong_specificity: "the record supports a different level of specificity",
+  payer_rule: "a payer rule applies", not_clinically_valid: "the code was not clinically valid for this record", missed_by_agent: "the agent did not find it", other: "another reason" };
+const ROOTS = { none: "Not sure", page_map_miss: "Page map missed it", skill_gap: "Skill gap", code_mismatch: "Code lookup mismatch", agent_reasoning: "Agent reasoning" };
+const SUPPORTS = { provider_statement: "Provider statement", evaluated: "Evaluated", tested: "Tested", treated: "Treated", management: "Changed management",
+  performed: "Performed", supporting_diagnosis: "Supporting diagnosis", other: "Other" };
+const CTX = [["system", "System prompt", "--c-system"], ["case", "Case summary and candidate", "--c-case"], ["skill", "Skill (procedural)", "--c-skill"],
+  ["pages", "Record pages (working)", "--c-pages"], ["feedback", "Past feedback (episodic)", "--c-feedback"], ["tools", "Tool results", "--c-tools"], ["reasoning", "Agent reasoning so far", "--c-reasoning"]];
+const PTYPES = [["note", "Physician notes"], ["labs", "Labs"], ["imaging", "Imaging and ECG"], ["mar", "Medication record"], ["nursing", "Triage and nursing"], ["admin", "Admin"]];
+const PHI = [[/\b\d{6,}\b/, "a long number"], [/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/, "a date"], [/\b\d{4}-\d{2}-\d{2}\b/, "a date"], [/[\w.+-]+@[\w-]+\.[\w.]+/, "an email address"], [/\b(?:mrn|dob|ssn)\b/i, "an identifier label"]];
+
+function ptype(t) {
+  t = (t || "").toLowerCase();
+  if (/lab/.test(t)) return "labs";
+  if (/radiolog|imaging|ecg|ekg|x-ray|ct |ultrasound/.test(t)) return "imaging";
+  if (/medication|mar\b/.test(t)) return "mar";
+  if (/triage|nursing/.test(t)) return "nursing";
+  if (/face|instruction|fax|consent|billing|blank/.test(t)) return "admin";
+  return "note";
+}
+function family(code, sys) { code = (code || "").toUpperCase(); return sys === "ICD-10-CM" ? code.split(".")[0].slice(0, 3) : code; }
+
+/* ---------------- data source ---------------- */
+const SAMPLE = JSON.parse($("sample-data").textContent);
+const S = { live: false, api: "", view: "overview", memTab: "working", caseId: null, cases: [], stats: null, proc: null, episodes: [], codes: [],
+  cache: {}, rates: store.get("rates", { in: 0, out: 0 }), newEpisodes: new Set(), driftThreshold: 3 };
+
+async function api(path, opts = {}) {
+  const res = await fetch(S.api + path, { headers: { "Content-Type": "application/json" }, ...opts });
+  const text = await res.text();
+  const body = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new Error((body && (typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail))) || res.statusText);
+  return body;
+}
+
+function loadSample() {
+  const d = structuredClone(SAMPLE);
+  S.live = false;
+  S.cases = [{ case_id: d.case.case_id, payer: d.case.payer, setting: d.case.setting, status: d.case.status, pages: d.pages.length }];
+  S.stats = d.stats; S.episodes = d.episodes; S.codes = d.codes;
+  S.proc = { ontology: d.ontology, rule_packs: { ER: d.rule_pack }, skills: d.skills, drift_flag_threshold: 3 };
+  S.driftThreshold = 3;
+  const pages = {}; d.pages.forEach((p) => { pages[p.page_num] = p.page_text; });
+  S.cache = { [d.case.case_id]: { case: d.case, findings: d.findings, trace: d.trace, stats: d.case_stats, pages } };
+  S.caseId = d.case.case_id;
+  if (!S.rates.in && !S.rates.out) S.rates = { in: 3, out: 15, placeholder: true };
+}
+
+async function loadLive(base) {
+  S.api = base.replace(/\/+$/, "");
+  await api("/health");
+  const [cases, stats, proc, episodes] = await Promise.all([api("/cases"), api("/stats"), api("/procedural"), api("/episodes")]);
+  S.live = true; S.cases = cases; S.stats = stats; S.proc = proc; S.episodes = episodes; S.codes = [];
+  S.driftThreshold = proc.drift_flag_threshold; S.cache = {};
+  S.caseId = cases.length ? cases[0].case_id : null;
+  if (S.caseId) await loadCase(S.caseId);
+}
+
+async function loadCase(id) {
+  if (!S.live) return;
+  const [c, findings, trace, stats] = await Promise.all([api(`/cases/${encodeURIComponent(id)}`), api(`/cases/${encodeURIComponent(id)}/findings`),
+    api(`/cases/${encodeURIComponent(id)}/trace`), api(`/cases/${encodeURIComponent(id)}/stats`)]);
+  S.cache[id] = { case: c, findings, trace, stats, pages: (S.cache[id] && S.cache[id].pages) || {} };
+}
+
+async function pageText(id, n) {
+  const c = S.cache[id];
+  if (c.pages[n] != null) return c.pages[n];
+  if (!S.live) return "";
+  const p = await api(`/cases/${encodeURIComponent(id)}/pages/${n}`);
+  c.pages[n] = p.page_text; return p.page_text;
+}
+
+async function refreshShared() {
+  if (!S.live) return;
+  const [stats, proc, episodes, cases] = await Promise.all([api("/stats"), api("/procedural"), api("/episodes"), api("/cases")]);
+  Object.assign(S, { stats, proc, episodes, cases });
+}
+
+const cur = () => S.cache[S.caseId];
+const costOf = (tin, tout) => (tin * (S.rates.in || 0) + tout * (S.rates.out || 0)) / 1e6;
+
+/* ---------------- shell ---------------- */
+function setMode() {
+  $("modeDot").classList.toggle("live", S.live);
+  $("modeText").textContent = S.live ? "Live · " + S.api : "Sample data, scripted model";
+  $("caseSel").innerHTML = S.cases.length ? S.cases.map((c) => `<option value="${esc(c.case_id)}"${c.case_id === S.caseId ? " selected" : ""}>${esc(c.case_id)}</option>`).join("")
+    : `<option value="">No cases yet</option>`;
+  $("rateIn").value = S.rates.in; $("rateOut").value = S.rates.out;
+}
+function show(view) {
+  S.view = view;
+  ["overview", "case", "memory"].forEach((v) => { $("v-" + v).hidden = v !== view; });
+  document.querySelectorAll(".nav button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.view === view)));
+  $("title").textContent = { overview: "Overview", case: "Agent run", memory: "Memory" }[view];
+  if (view === "overview") renderOverview();
+  if (view === "case") renderCase();
+  if (view === "memory") renderMemory();
+}
+document.querySelector(".nav").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) show(b.dataset.view); });
+$("caseSel").addEventListener("change", async (e) => {
+  S.caseId = e.target.value || null;
+  try { if (S.live && S.caseId && !S.cache[S.caseId]) await loadCase(S.caseId); } catch (err) { alertErr(err); }
+  show(S.view);
+});
+$("coderId").value = store.get("coder", "coder-demo");
+$("coderId").addEventListener("input", (e) => store.set("coder", e.target.value));
+$("apiUrl").value = store.get("api", location.protocol.startsWith("http") ? location.origin : "");
+$("connect").addEventListener("click", async () => {
+  const url = $("apiUrl").value.trim();
+  if (!url) { loadSample(); setMode(); show(S.view); return; }
+  $("connect").disabled = true; $("connect").textContent = "Connecting";
+  try { await loadLive(url); store.set("api", url); } catch (err) { loadSample(); $("modeText").textContent = "Could not connect: " + err.message; }
+  $("connect").disabled = false; $("connect").textContent = "Connect";
+  setMode(); if (!S.live) $("modeText").textContent = "Sample data · could not reach " + url; show(S.view);
+});
+$("theme").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark"; store.set("theme", root.dataset.theme);
+});
+{ const t = store.get("theme", null); if (t) document.documentElement.dataset.theme = t; }
+["rateIn", "rateOut"].forEach((id) => $(id).addEventListener("input", () => {
+  S.rates = { in: Number($("rateIn").value) || 0, out: Number($("rateOut").value) || 0 }; store.set("rates", S.rates);
+  if (S.view === "overview") renderOverview(); else if (S.view === "case") renderRunStats();
+}));
+function alertErr(err) { $("modeText").textContent = "Error: " + err.message; }
+
+/* ---------------- overview ---------------- */
+function renderOverview() {
+  const st = S.stats || { cases: 0, pages: 0, findings: {}, episodes: 0, per_case: [] };
+  const per = st.per_case || [];
+  const tin = per.reduce((a, c) => a + c.input_tokens, 0), tout = per.reduce((a, c) => a + c.output_tokens, 0);
+  const f = st.findings || {};
+  const pending = Object.values(S.cache).reduce((a, c) => a + c.findings.filter((x) => x.review_status === "pending").length, 0);
+  $("ovBanner").innerHTML = S.live ? "" : `<div class="banner">Showing one synthetic ER case run with a scripted model. It shows the pipeline, memory reads and checks working; it says nothing about accuracy on real records. Connect to your API to see real runs.</div>`;
+  const k = [[st.cases, "Cases", fmt(st.pages) + " pages ingested"], [f.missed || 0, "Missed codes found", "in the record, not on the claim"],
+    [f.unsupported || 0, "Claim codes lacking support", (f.confirmed || 0) + " confirmed, " + (f.needs_review || 0) + " need review"],
+    [pending, "Findings pending review", "in loaded cases"], [st.episodes, "Coder corrections saved", "episodic memory"],
+    [per.length ? usd(costOf(tin, tout) / per.length) : "–", "Reasoning cost per case", S.rates.placeholder ? "placeholder rates" : "at your rates"]];
+  $("kpis").innerHTML = k.map(([v, l, s]) => `<div class="card kpi"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  const meta = Object.fromEntries(S.cases.map((c) => [c.case_id, c]));
+  $("caseTable").innerHTML = per.length ? `<thead><tr><th>Case</th><th>Payer</th><th>Status</th><th class="n">Pages</th><th class="n">Opened</th><th class="n">Peak context</th><th class="n">Tokens in / out</th><th class="n">Model calls</th><th class="n">Cost</th><th>Findings</th></tr></thead><tbody>` +
+    per.map((c) => { const m = meta[c.case_id] || {}; const fb = c.findings || {};
+      return `<tr class="click" data-case="${esc(c.case_id)}" tabindex="0"><td class="mono nw">${esc(c.case_id)}</td><td class="nw">${esc(m.payer)}</td><td><span class="badge b-${esc(m.status)}">${esc((m.status || "").replace("_", " "))}</span></td>
+      <td class="n">${c.pages}</td><td class="n">${c.pages_opened}</td><td class="n">${fmt(c.peak_context_tokens)}</td><td class="n">${fmt(c.input_tokens)} / ${fmt(c.output_tokens)}</td><td class="n">${c.model_calls}</td>
+      <td class="n">${usd(costOf(c.input_tokens, c.output_tokens))}</td><td><div class="chips">${Object.entries(fb).map(([b, n]) => `<span class="badge b-${esc(b)}">${n} ${esc(BUCKET_LABEL[b] || b)}</span>`).join("")}</div></td></tr>`; }).join("") + "</tbody>"
+    : `<tbody><tr><td class="empty">No cases yet. Ingest one with POST /cases.</td></tr></tbody>`;
+  const max = Math.max(1, ...Object.values(f));
+  const colors = { confirmed: "var(--ok)", unsupported: "var(--bad)", missed: "var(--info)", needs_review: "var(--warn)" };
+  $("bucketBars").innerHTML = Object.keys(BUCKET_LABEL).map((b) => `<div class="b"><span>${BUCKET_LABEL[b]}</span><div class="t"><i style="width:${(f[b] || 0) / max * 100}%;background:${colors[b]}"></i></div><span class="mono" style="text-align:right">${f[b] || 0}</span></div>`).join("");
+  const eps = S.episodes.slice(0, 5);
+  $("recentEp").innerHTML = eps.length ? eps.map((e) => `<div class="it"><span class="badge b-${esc(e.decision)}">${esc(e.decision)}</span><span><span class="mono">${esc(e.code)}</span> · ${esc(REASONS[e.reason] || e.reason)} <span class="muted">· ${esc(e.payer)} · ${esc(e.coder_id)}</span></span></div>`).join("")
+    : `<p class="empty">No corrections yet.</p>`;
+  const skills = (S.proc && S.proc.skills) || [];
+  $("driftList").innerHTML = skills.map((s) => { const n = s.drift_flag_count, over = n >= S.driftThreshold;
+    return `<div class="it"><span class="badge ${over ? "b-unsupported" : n ? "b-needs_review" : ""}">${n} / ${S.driftThreshold}</span><span>${esc(s.title)} <span class="muted mono">v${esc(s.version)}</span>${over ? ' <span class="flag">fix in dev</span>' : ""}</span></div>`; }).join("")
+    + `<p class="note">A coder correction tagged as a skill gap adds a flag. Skills never change in production; at the threshold they are fixed in dev and redeployed.</p>`;
+}
+$("caseTable").addEventListener("click", (e) => { const r = e.target.closest("tr[data-case]"); if (!r) return; S.caseId = r.dataset.case; setMode(); openCase(); });
+$("caseTable").addEventListener("keydown", (e) => { if (e.key === "Enter") { const r = e.target.closest("tr[data-case]"); if (r) { S.caseId = r.dataset.case; setMode(); openCase(); } } });
+async function openCase() { try { if (S.live && !S.cache[S.caseId]) await loadCase(S.caseId); } catch (err) { alertErr(err); } show("case"); }
+
+/* ---------------- graph ---------------- */
+const GN = { intake: [62, 44, "Intake"], pagemap: [180, 44, "Page map"], summary: [298, 44, "Case summary"], plan: [416, 44, "Plan"], discover: [534, 44, "Discover"], review: [652, 44, "Coder review"],
+  skill: [180, 160, "Load skill"], find: [298, 160, "Find pages"], read: [416, 160, "Read pages"], check: [534, 160, "Check code"], verdict: [652, 160, "Verdict"] };
+const GW = 104, GH = 38;
+const GM = { procedural: [180, "Procedural"], working: [357, "Working"], semantic: [534, "Semantic"], episodic: [652, "Episodic"] };
+const GML = { procedural: ["skill"], working: ["find", "read"], semantic: ["check"], episodic: ["check"] };
+const GE = [["intake", "pagemap"], ["pagemap", "summary"], ["summary", "plan"], ["plan", "discover"], ["discover", "review"], ["skill", "find"], ["find", "read"], ["read", "check"], ["check", "verdict"]];
+function buildGraph() {
+  let s = `<svg viewBox="0 0 714 292" role="img" aria-label="Agent graph: intake, page map, case summary, plan, discover and coder review, with a per-candidate loop of load skill, find pages, read pages, check code and verdict, and the four memory layers it reads">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L8 5L1 9" fill="none" style="stroke:var(--line-strong)" stroke-width="1.6" stroke-linecap="round"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L8 5L1 9" fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-linecap="round"/></marker></defs>
+  <rect class="gloop" id="g-loop" x="118" y="118" width="590" height="84" rx="12"/><text class="sub" x="120" y="111">Code loop, once per candidate</text>`;
+  for (const [a, b] of GE) { const A = GN[a], B = GN[b]; s += `<line class="ge" id="ge-${a}-${b}" x1="${A[0] + GW / 2 + 2}" y1="${A[1]}" x2="${B[0] - GW / 2 - 4}" y2="${B[1]}"/>`; }
+  s += `<line class="ge" id="ge-plan-loop" x1="416" y1="${44 + GH / 2 + 2}" x2="416" y2="116"/><line class="ge" id="ge-discover-loop" x1="534" y1="${44 + GH / 2 + 2}" x2="534" y2="116"/>`;
+  for (const k in GM) for (const t of GML[k]) { const x = GN[t][0]; s += `<line class="gl" id="gl-${k}-${t}" x1="${GM[k][0]}" y1="236" x2="${x}" y2="${160 + GH / 2 + 2}"/>`; }
+  for (const k in GN) { const [x, y, l] = GN[k]; s += `<g class="gn" id="gn-${k}"><rect x="${x - GW / 2}" y="${y - GH / 2}" width="${GW}" height="${GH}" rx="9"/><text x="${x}" y="${y + 4}" text-anchor="middle">${l}</text><text class="cnt" id="gc-${k}" x="${x + GW / 2 - 2}" y="${y - GH / 2 - 5}" text-anchor="end"></text></g>`; }
+  for (const k in GM) { const [x, l] = GM[k]; s += `<g class="gm" id="gm-${k}"><rect x="${x - 54}" y="236" width="108" height="30" rx="15"/><text x="${x}" y="255" text-anchor="middle">${l}</text><text class="sub" id="gmc-${k}" x="${x}" y="284" text-anchor="middle"></text></g>`; }
+  $("graph").innerHTML = s + "</svg>";
+}
+
+/* ---------------- replay ---------------- */
+const R = { i: 0, timer: null, speed: 1, events: [], st: null };
+function freshState() {
+  return { nodes: {}, mem: {}, prev: null, opened: new Set(), now: new Set(), ctx: {}, peak: 0, tin: 0, tout: 0, llm: 0, tools: 0, cand: null, verdicts: new Set(), edges: new Set(), memEdges: new Set(), lookups: {} };
+}
+const TOOL_NODE = { load_skill: "skill", find_pages: "find", search_text: "find", read_page: "read", lookup_code: "check", get_precedents: "check", submit_verdict: "verdict" };
+function nodeOf(e) {
+  if (e.node === "intake") return "intake";
+  if (e.node === "page_map") return "pagemap";
+  if (e.node === "case_summary") return "summary";
+  if (e.node === "plan") return "plan";
+  if (e.node === "discover") return "discover";
+  if (e.node === "coder_review") return "review";
+  if (e.node === "verdict") return "verdict";
+  if (e.node === "code_loop" && e.detail && e.detail.tool) return TOOL_NODE[e.detail.tool] || null;
+  return null;
+}
+function memOf(e) {
+  const l = e.detail && e.detail.layer;
+  if (!l) return null;
+  return l === "working" && e.node === "code_loop" ? "working" : l === "working" ? null : l;
+}
+function step(e) {
+  const st = R.st;
+  if (e.candidate !== undefined && e.node === "code_loop" || e.node === "verdict") st.cand = e.candidate;
+  const n = nodeOf(e);
+  if (n) {
+    if (st.prev !== n) st.nodes[n] = (st.nodes[n] || 0) + 1;
+    if (st.prev && st.prev !== n) {
+      st.edges.add(st.prev + "-" + n);
+      if (["plan", "discover"].includes(st.prev) && GN[n][1] === 160) st.edges.add(st.prev + "-loop");
+    }
+    if (n === "discover") st.edges.add("plan-discover");
+    if (n === "review") st.edges.add("discover-review");
+    st.prev = n;
+  }
+  const m = memOf(e);
+  if (m) { st.mem[m] = (st.mem[m] || 0) + 1; st.memNow = m; const t = n && GML[m].includes(n) ? n : GML[m][0]; st.memEdges.add(m + "-" + t); } else st.memNow = null;
+  if (e.kind === "llm") { st.llm++; if (e.detail && e.detail.context) st.ctx = e.detail.context; else st.ctx = { system: 0, case: e.input_tokens }; }
+  st.tin += e.input_tokens || 0; st.tout += e.output_tokens || 0;
+  if (e.context_tokens) st.peak = Math.max(st.peak, e.context_tokens);
+  if (e.detail && e.detail.tool) {
+    st.tools++;
+    if (e.detail.tool === "read_page") { const p = e.detail.args.page_num; st.opened.add(p); st.now.add(p); }
+    if (e.detail.tool === "lookup_code") { const q = e.detail.args.query; st.lookups[q] = (st.lookups[q] || 0) + 1; }
+  } else if (e.kind === "llm") st.now = new Set();
+  if (e.node === "verdict" && e.detail && e.detail.code && !e.detail.dropped) st.verdicts.add(e.detail.code);
+  if (e.node === "code_loop" && e.kind === "llm" && e.detail && e.detail.step === 1) st.now = new Set();
+}
+function traceLine(e) {
+  const d = e.detail || {}, a = d.args || {};
+  if (e.node === "intake") return `Record received: ${d.pages} pages, ${d.claim_codes} codes on the claim`;
+  if (e.node === "page_map") return `Page map stored in working memory: ${d.cards} index cards`;
+  if (e.node === "case_summary" && e.kind === "llm") return `Case summary ${esc(d.step)} from the index cards`;
+  if (e.node === "case_summary") return "Case summary saved; it stays in context for every step";
+  if (e.node === "plan" && d.skipped) return `<span class="mono">${esc(e.candidate)}</span> skipped: ${esc(d.skipped)}`;
+  if (e.node === "plan") return `Verify ${d.candidates.length} claim codes with the ${esc(d.rule_pack)} rule pack`;
+  if (e.node === "discover" && e.kind === "llm") return `Compared the page map with ${d.handled} handled codes`;
+  if (e.node === "discover" && d.error) return esc(d.error);
+  if (e.node === "discover") return d.leads.length ? `Leads to check: ${d.leads.map(esc).join(", ")}` : "No leads found";
+  if (e.node === "coder_review") return "Ready for coder review: " + Object.entries(d.findings).map(([b, n]) => `${n} ${BUCKET_LABEL[b] || b}`).join(", ");
+  if (e.node === "verdict") {
+    if (d.dropped) return `Lead dropped (${esc(d.dropped)})${d.code ? ` · <span class="mono">${esc(d.code)}</span>` : ""}`;
+    if (d.reason) return `Needs review: ${esc(d.reason)}`;
+    return `Verdict: <b>${esc(BUCKET_LABEL[d.bucket] || d.bucket)}</b> · <span class="mono">${esc(d.code)}</span>${d.flags && d.flags.length ? ` · flags: ${d.flags.map(esc).join(", ")}` : ""}`;
+  }
+  if (e.kind === "llm") return `Model step ${d.step}${d.tool_calls && d.tool_calls.length ? " → " + d.tool_calls.map(esc).join(", ") : " (no tool call)"}`;
+  if (e.kind === "memory" && !d.tool) return `Past coder feedback pre-loaded: ${d.precedents} pattern(s) from episodes ${(d.episode_ids || []).join(", ")}`;
+  const err = d.error ? ' <span class="err">error</span>' : "";
+  switch (d.tool) {
+    case "load_skill": return `Loaded skill <span class="mono">${esc(a.skill_id)}</span>` + err;
+    case "find_pages": return `find_pages "${esc(a.term)}"${a.page_type ? " in " + esc(a.page_type) : ""}` + err;
+    case "search_text": return `search_text "${esc(a.query)}"` + err;
+    case "read_page": return `read_page ${esc(a.page_num)}` + err;
+    case "lookup_code": return `lookup_code "${esc(a.query)}"` + err;
+    case "get_precedents": return `get_precedents <span class="mono">${esc(a.code)}</span>` + err;
+    case "submit_verdict": return `submit_verdict: ${a.supported ? "supported" : "not supported"}, ${(a.evidence || []).length} quotes` + err;
+  }
+  return esc(d.tool || e.kind);
+}
+function traceRow(e, i) {
+  const tag = e.kind === "node" ? "step" : e.kind;
+  const x = e.kind === "llm" ? `${fmt(e.input_tokens)} in` : e.detail && e.detail.result_tokens ? `+${fmt(e.detail.result_tokens)}` : "";
+  return `<li data-i="${i}"><span class="t t-${esc(e.kind)}">${esc(tag)}</span><span>${traceLine(e)}</span><span class="x">${x}</span></li>`;
+}
+function renderTraceUpTo(n) {
+  let html = "", last = undefined;
+  for (let i = 0; i < n; i++) {
+    const e = R.events[i]; const c = e.node === "code_loop" || e.node === "verdict" ? e.candidate : e.node === "discover" ? "__discover" : "__pipeline";
+    if (c !== last) { html += `<li class="hd">${c === "__pipeline" ? "Pipeline" : c === "__discover" ? "Discover pass" : "Candidate: " + esc(c)}</li>`; last = c; }
+    html += traceRow(e, i);
+  }
+  $("trace").innerHTML = html || `<li class="empty">Nothing yet. Replay the run to watch each step.</li>`;
+  const rows = $("trace").querySelectorAll("li[data-i]"); if (rows.length && n < R.events.length) rows[rows.length - 1].classList.add("cur");
+  $("trace").scrollTop = $("trace").scrollHeight;
+  $("traceCount").textContent = `${n} / ${R.events.length} events`;
+}
+function paint() {
+  const st = R.st, total = R.events.length, n = R.i;
+  document.querySelectorAll(".gn").forEach((g) => g.classList.remove("on", "seen"));
+  for (const k in st.nodes) { $("gn-" + k).classList.add(k === st.prev && n < total ? "on" : "seen"); $("gc-" + k).textContent = st.nodes[k] > 1 ? "×" + st.nodes[k] : ""; }
+  for (const k in GN) if (!st.nodes[k]) $("gc-" + k).textContent = "";
+  document.querySelectorAll(".ge").forEach((l) => l.classList.toggle("on", st.edges.has(l.id.slice(3))));
+  $("g-loop").classList.toggle("on", !!(st.nodes.skill));
+  for (const k in GM) { const g = $("gm-" + k); g.classList.remove("hit", "seen"); if (st.mem[k]) g.classList.add(k === st.memNow && n < total ? "hit" : "seen");
+    $("gmc-" + k).textContent = st.mem[k] ? st.mem[k] + (st.mem[k] === 1 ? " read" : " reads") : ""; }
+  document.querySelectorAll(".gl").forEach((l) => l.classList.toggle("on", st.memEdges.has(l.id.slice(3))));
+  $("curCand").textContent = n < total && st.cand ? "Working on " + st.cand : n >= total ? "Run complete" : "";
+  $("prog").style.width = (total ? n / total * 100 : 0) + "%";
+  renderTraceUpTo(n);
+  renderContext(); renderRunStats(); renderTiles(); renderFindings();
+}
+function renderContext() {
+  const ctx = R.st.ctx || {}; const tot = Object.values(ctx).reduce((a, b) => a + b, 0);
+  const scale = Math.max(tot, R.st.peak, 1);
+  $("ctxNow").textContent = fmt(tot);
+  $("ctxStack").innerHTML = CTX.map(([k, , c]) => `<i style="width:${(ctx[k] || 0) / scale * 100}%;background:var(${c})"></i>`).join("");
+  $("ctxLegend").innerHTML = CTX.map(([k, l, c]) => `<div><i style="background:var(${c})"></i><span>${l}</span><span>${fmt(ctx[k] || 0)}</span></div>`).join("");
+}
+function renderRunStats() {
+  const c = cur(); if (!c || !R.st) return;
+  const st = R.st, s = c.stats || {};
+  $("runKv").innerHTML = `<span>Peak context</span><span>${fmt(st.peak)}</span><span>Whole record, estimated</span><span>${fmt(s.record_tokens_estimate)}</span>
+    <span>Tokens in / out so far</span><span>${fmt(st.tin)} / ${fmt(st.tout)}</span><span>Model calls · tool calls</span><span>${st.llm} · ${st.tools}</span>
+    <span><b>Reasoning cost so far</b></span><span><b>${usd(costOf(st.tin, st.tout))}</b></span>`;
+  $("ctxNote").textContent = (s.record_tokens_estimate && s.record_tokens_estimate < 5000 ? "This sample record is tiny, so the fixed prompt outweighs it. On a 300-page record the context stays about this size while the record grows. " : "")
+    + (S.rates.placeholder ? "Costs use placeholder rates; set yours on the Overview." : "");
+}
+function renderTiles() {
+  const c = cur(); if (!c) return;
+  const cards = c.case.page_map || [];
+  $("tiles").innerHTML = cards.map((p) => { const cls = ["tile"]; if (p.quality === "low_value") cls.push("low");
+    if (R.st.opened.has(p.page)) cls.push("read"); if (R.st.now.has(p.page) && R.i < R.events.length) cls.push("now"); if (S.selPage === p.page) cls.push("sel");
+    return `<button class="${cls.join(" ")}" style="--pc:var(--p-${ptype(p.page_type)})" data-p="${p.page}" aria-label="Page ${p.page}, ${esc(p.page_type)}${R.st.opened.has(p.page) ? ", opened by the agent" : ""}">${p.page}</button>`; }).join("");
+  $("pagesOpened").textContent = `${R.st.opened.size} of ${cards.length} opened in full`;
+}
+function visibleFindings() {
+  const c = cur(); const done = R.i >= R.events.length;
+  return c.findings.filter((f) => done || f.source === "coder" || R.st.verdicts.has(f.code));
+}
+function play() {
+  if (R.i >= R.events.length) { R.timer = null; $("runBtn").textContent = S.live ? "Run agent" : "Replay run"; paint(); return; }
+  const e = R.events[R.i]; step(e); R.i++; paint();
+  const base = { llm: 420, tool: 260, memory: 340, result: 560, node: 420 }[e.kind] || 300;
+  R.timer = setTimeout(play, base / R.speed);
+}
+function startReplay() {
+  clearTimeout(R.timer); R.events = cur().trace; R.i = 0; R.st = freshState(); S.selPage = null;
+  $("pview").innerHTML = `<p class="empty">Select a page to see its index card and text. Highlighted text is evidence the agent cited.</p>`;
+  $("runBtn").textContent = "Replaying"; paint(); play();
+}
+function finishReplay() { clearTimeout(R.timer); R.timer = null; if (!R.st || R.events !== cur().trace) { R.events = cur().trace; R.i = 0; R.st = freshState(); }
+  while (R.i < R.events.length) step(R.events[R.i++]); $("runBtn").textContent = S.live ? "Run agent" : "Replay run"; paint(); }
+$("runBtn").addEventListener("click", async () => {
+  if (!cur()) return;
+  if (!S.live) { startReplay(); return; }
+  $("runErr").hidden = true; $("runBtn").disabled = true; $("runBtn").textContent = "Agent running";
+  try { await api(`/cases/${encodeURIComponent(S.caseId)}/run`, { method: "POST" }); await loadCase(S.caseId); await refreshShared(); setMode(); renderCaseHead(); startReplay(); }
+  catch (err) { $("runErr").textContent = "Run failed: " + err.message; $("runErr").hidden = false; $("runBtn").textContent = "Run agent"; }
+  $("runBtn").disabled = false;
+});
+$("skipBtn").addEventListener("click", () => cur() && finishReplay());
+$("speedSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; R.speed = Number(b.dataset.s);
+  $("speedSeg").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); });
+
+/* ---------------- case view ---------------- */
+function renderCaseHead() {
+  const c = cur(); const k = c.case;
+  $("caseTitle").textContent = k.case_id;
+  $("caseStatus").className = "badge b-" + k.status; $("caseStatus").textContent = k.status.replace("_", " ");
+  $("caseMeta").textContent = `${k.setting} · ${k.payer} · ${(k.page_map || []).length} pages · ${k.claim_codes.length} codes on the claim`;
+  const skipped = new Set(c.trace.filter((e) => e.node === "plan" && e.detail && e.detail.skipped).map((e) => e.candidate));
+  $("claimChips").innerHTML = k.claim_codes.map((x) => `<span class="chip${skipped.has(x.code) ? " off" : ""}" title="${skipped.has(x.code) ? "Visit-level code, out of scope" : esc(x.code_system)}">${esc(x.code)} <span class="muted">${esc(x.code_system)}</span></span>`).join("")
+    + (skipped.size ? `<span class="muted" style="font-size:12px;align-self:center">Struck-through codes are visit-level and out of scope.</span>` : "");
+  $("runBtn").textContent = S.live ? "Run agent" : "Replay run";
+  $("pageLegend").innerHTML = PTYPES.map(([k2, l]) => `<div><i style="background:var(--p-${k2})"></i><span>${l}</span></div>`).join("");
+}
+function renderCase() {
+  const c = cur();
+  if (!c) { $("caseTitle").textContent = "No case selected"; $("graph").innerHTML = ""; $("trace").innerHTML = ""; $("findings").innerHTML = `<p class="empty">Ingest a case with POST /cases, then pick it above.</p>`; return; }
+  renderCaseHead(); buildGraph();
+  if (!R.st || R.events !== c.trace) { R.events = c.trace; R.i = R.events.length; R.st = freshState(); R.events.forEach(step); }
+  paint();
+}
+$("tiles").addEventListener("click", (e) => { const b = e.target.closest("button[data-p]"); if (b) selectPage(Number(b.dataset.p)); });
+async function selectPage(n) {
+  S.selPage = n; renderTiles();
+  const c = cur(); const card = (c.case.page_map || []).find((p) => p.page === n) || {};
+  let text = "";
+  try { text = await pageText(S.caseId, n); } catch (err) { text = "Could not load page: " + err.message; }
+  const quotes = c.findings.flatMap((f) => f.evidence.filter((e) => e.page === n).map((e) => e.quote));
+  const row = (k, v) => `<dt>${k}</dt><dd>${v && v.length ? esc(Array.isArray(v) ? v.join(", ") : v) : '<span class="muted">none listed</span>'}</dd>`;
+  $("pview").innerHTML = `<h3>Page ${n} · ${esc(card.page_type || "")}</h3><dl>${row("Opened by agent", R.st.opened.has(n) ? "Yes" : "No, index card only")}${row("Quality", (card.quality || "clean").replace("_", " "))}
+    ${row("Problems", card.problems)}${row("Medications", card.medications)}${row("Procedures", card.procedures)}${row("Abnormal values", card.abnormal_values)}</dl>
+    <div class="ptext">${highlight(text, quotes)}</div>`;
+}
+function highlight(text, quotes) {
+  const low = text.toLowerCase(); const spans = [];
+  for (const q of quotes) { const i = low.indexOf(q.toLowerCase().trim()); if (i >= 0) spans.push([i, i + q.trim().length]); }
+  spans.sort((a, b) => a[0] - b[0]);
+  let out = "", pos = 0;
+  for (const [a, b] of spans) { if (a < pos) continue; out += esc(text.slice(pos, a)) + "<mark>" + esc(text.slice(a, b)) + "</mark>"; pos = b; }
+  return out + esc(text.slice(pos));
+}
+
+/* ---------------- findings and review ---------------- */
+function reasonOptions(sel) { return Object.entries(REASONS).map(([k, l]) => `<option value="${k}"${k === sel ? " selected" : ""}>${l}</option>`).join(""); }
+function rootOptions() { return Object.entries(ROOTS).map(([k, l]) => `<option value="${k}">${l}</option>`).join(""); }
+function sysOptions() { return ["ICD-10-CM", "CPT", "HCPCS"].map((s) => `<option>${s}</option>`).join(""); }
+function renderFindings() {
+  const c = cur(); if (!c) return;
+  const list = visibleFindings();
+  const order = { needs_review: 0, unsupported: 1, missed: 2, confirmed: 3 };
+  list.sort((a, b) => (order[a.bucket] ?? 9) - (order[b.bucket] ?? 9) || a.finding_id - b.finding_id);
+  const open = S.openForm;
+  $("findings").innerHTML = list.length ? list.map((f) => {
+    const flags = (f.flags || []).map((x) => `<div class="flag">⚑ ${esc(x.type.replaceAll("_", " "))}${x.with ? " with " + esc(x.with) : ""}${x.missing ? ": " + esc(x.missing.join(", ")) : ""}${x.pages ? " on p. " + esc(x.pages.join(", ")) : ""}</div>`).join("");
+    const ev = f.evidence.length ? `<div class="ev">${f.evidence.map((e) => `<div><span class="${e.verified ? "ok-i" : "bad-i"}" title="${e.verified ? "Quote found on the cited page" : "Quote not found on the cited page"}">${e.verified ? "✓" : "✗"}</span><button class="chip" data-p="${e.page}">p. ${e.page}</button><span>“${esc(e.quote)}” <span class="muted">· ${esc(SUPPORTS[e.supports] || e.supports)}</span></span></div>`).join("")}</div>` : "";
+    const meta = [f.source === "claim" ? "On the claim" : f.source === "lead" ? "Found by the discover pass" : "Added by a coder",
+      f.skill_id ? `skill ${esc(f.skill_id)} v${esc(f.skill_version)}` : "", f.precedent_ids && f.precedent_ids.length ? `${f.precedent_ids.length} past correction(s) considered` : "",
+      f.pages_read && f.pages_read.length ? `read p. ${f.pages_read.join(", ")}` : ""].filter(Boolean).map((m) => `<span>${m}</span>`).join("");
+    let acts;
+    if (f.review_status !== "pending") acts = `<span class="badge b-${esc(f.review_status)}">${esc(REVIEW_LABEL[f.review_status] || f.review_status)}</span>${f._msg ? ` <span class="okmsg">${esc(f._msg)}</span>` : ""}`;
+    else if (open && open.id === f.finding_id) acts = reviewForm(f, open.mode);
+    else acts = `<button class="btn sm" data-act="accept" data-id="${f.finding_id}">Accept</button><button class="btn sm" data-act="reject" data-id="${f.finding_id}">Reject</button><button class="btn sm" data-act="correct" data-id="${f.finding_id}">Correct</button>`;
+    return `<article class="finding"><div class="fh"><span class="badge b-${esc(f.bucket)}">${esc(BUCKET_LABEL[f.bucket] || f.bucket)}</span><span class="code">${esc(f.code)}</span><span class="desc">${esc(f.description || "not in the reference code set")}</span></div>
+      ${f.rationale ? `<p class="fr">${esc(f.rationale)}</p>` : ""}${ev}${flags}<div class="fmeta">${meta}</div><div class="acts">${acts}</div></article>`;
+  }).join("") : `<p class="empty">${R.i < R.events.length ? "Findings appear as the agent reaches each verdict." : "No findings for this case yet."}</p>`;
+}
+function reviewForm(f, mode) {
+  return `<form class="form" data-review="${f.finding_id}" data-mode="${mode}" novalidate style="width:100%">
+    <div class="row"><label class="field">Reason<select class="select" name="reason"><option value="">Choose a reason</option>${reasonOptions()}</select></label>
+    <label class="field">Root cause<select class="select" name="root_cause">${rootOptions()}</select></label></div>
+    ${mode === "correct" ? `<div class="row"><label class="field">Correct code<input class="input mono" name="corrected_code" autocomplete="off"></label><label class="field">Code set<select class="select" name="corrected_code_system">${sysOptions()}</select></label></div>` : ""}
+    <label class="field">Note for future cases (optional, no patient details)<textarea class="input" name="note" maxlength="300"></textarea></label>
+    <p class="err" data-err hidden></p>
+    <div class="acts"><button class="btn sm primary" type="submit">Save ${mode === "correct" ? "correction" : "rejection"}</button><button class="btn sm ghost" type="button" data-act="cancel">Cancel</button></div></form>`;
+}
+function phiCheck(note) { for (const [re, l] of PHI) if (note && re.test(note)) return `The note looks like it contains ${l}. Episodes must not hold patient details.`; return null; }
+$("findings").addEventListener("click", async (e) => {
+  const chip = e.target.closest("button.chip[data-p]"); if (chip) { selectPage(Number(chip.dataset.p)); return; }
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const act = b.dataset.act;
+  if (act === "cancel") { S.openForm = null; renderFindings(); return; }
+  const id = Number(b.dataset.id);
+  if (act === "accept") { const m = await submitReview(id, { decision: "accept" }); $("runErr").textContent = m || ""; $("runErr").hidden = !m; return; }
+  S.openForm = { id, mode: act }; renderFindings();
+  const sel = $("findings").querySelector(`form[data-review="${id}"] select`); if (sel) sel.focus();
+});
+$("findings").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target, id = Number(form.dataset.review), mode = form.dataset.mode, fd = new FormData(form), err = form.querySelector("[data-err]");
+  const body = { decision: mode === "correct" ? "correct" : "reject", reason: fd.get("reason"), root_cause: fd.get("root_cause"), note: (fd.get("note") || "").trim() || null };
+  if (!body.reason) { err.textContent = "Choose a reason first."; err.hidden = false; return; }
+  if (mode === "correct") { body.corrected_code = (fd.get("corrected_code") || "").trim().toUpperCase(); body.corrected_code_system = fd.get("corrected_code_system");
+    if (!body.corrected_code) { err.textContent = "Enter the correct code."; err.hidden = false; return; } }
+  const phi = phiCheck(body.note); if (phi) { err.textContent = phi; err.hidden = false; return; }
+  const msg = await submitReview(id, body); if (msg) { err.textContent = msg; err.hidden = false; }
+});
+$("findings").addEventListener("input", (e) => { const err = e.target.closest("form") && e.target.closest("form").querySelector("[data-err]"); if (err) err.hidden = true; });
+
+async function submitReview(id, body) {
+  const coder = $("coderId").value.trim();
+  if (!coder) return "Enter your coder ID in the side panel first.";
+  body.coder_id = coder;
+  const c = cur(); const f = c.findings.find((x) => x.finding_id === id);
+  try {
+    let res;
+    if (S.live) { res = await api(`/findings/${id}/review`, { method: "POST", body: JSON.stringify(body) }); await loadCase(S.caseId); await refreshShared(); }
+    else res = simulateReview(f, body);
+    const nf = cur().findings.find((x) => x.finding_id === id);
+    if (nf) nf._msg = res.episode_id ? `Saved as episode ${res.episode_id}${res.drift ? ` · skill ${res.drift.skill_id} flagged (${res.drift.drift_flag_count}/${S.driftThreshold})` : ""}` : "";
+    if (res.episode_id) S.newEpisodes.add(res.episode_id);
+    S.openForm = null; setMode(); renderCaseHead(); renderFindings(); return null;
+  } catch (err) { return err.message; }
+}
+function simulateReview(f, body) {
+  if (body.decision === "accept") { f.review_status = "accepted"; closeIfDone(); return { episode_id: null }; }
+  const k = cur().case; const eid = Math.max(0, ...S.episodes.map((e) => e.episode_id)) + 1;
+  S.episodes.unshift({ episode_id: eid, setting: k.setting, payer: k.payer, code: f.code, code_system: f.code_system, code_family: family(f.code, f.code_system), agent_bucket: f.bucket,
+    decision: body.decision === "reject" ? "rejected" : "corrected", corrected_code: body.corrected_code || null, reason: body.reason, root_cause: body.root_cause, note: body.note,
+    skill_id: f.skill_id, skill_version: f.skill_version, coder_id: body.coder_id, case_hash: "sample-" + k.case_id, created_at: new Date().toISOString() });
+  f.review_status = body.decision === "reject" ? "rejected" : "corrected";
+  S.stats.episodes = S.episodes.length;
+  let drift = null;
+  if (body.root_cause === "skill_gap" && f.skill_id) { const s = S.proc.skills.find((x) => x.skill_id === f.skill_id); s.drift_flag_count++; drift = { skill_id: s.skill_id, drift_flag_count: s.drift_flag_count }; }
+  closeIfDone(); return { episode_id: eid, drift };
+}
+function closeIfDone() { const c = cur(); if (!c.findings.some((x) => x.review_status === "pending")) { c.case.status = "reviewed"; const m = S.cases.find((x) => x.case_id === S.caseId); if (m) m.status = "reviewed"; } }
+
+$("addMissedBtn").addEventListener("click", () => {
+  const box = $("addMissed"); if (!box.hidden) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<form class="form" id="missedForm" novalidate style="margin-bottom:12px"><div class="row"><label class="field">Code<input class="input mono" name="code" autocomplete="off"></label>
+    <label class="field">Code set<select class="select" name="code_system">${sysOptions()}</select></label></div>
+    <div class="row"><label class="field">Reason<select class="select" name="reason">${reasonOptions("missed_by_agent")}</select></label><label class="field">Root cause<select class="select" name="root_cause">${rootOptions()}</select></label></div>
+    <label class="field">Note (optional, no patient details)<textarea class="input" name="note" maxlength="300"></textarea></label><p class="err" data-err hidden></p>
+    <div class="acts"><button class="btn sm primary" type="submit">Add code</button><button class="btn sm ghost" type="button" id="missedCancel">Cancel</button></div></form>`;
+  box.querySelector("input").focus();
+  $("missedCancel").onclick = () => { box.hidden = true; };
+  $("missedForm").onsubmit = async (ev) => {
+    ev.preventDefault(); const fd = new FormData(ev.target), err = ev.target.querySelector("[data-err]");
+    const body = { code: (fd.get("code") || "").trim().toUpperCase(), code_system: fd.get("code_system"), reason: fd.get("reason"), root_cause: fd.get("root_cause"), note: (fd.get("note") || "").trim() || null, coder_id: $("coderId").value.trim() };
+    if (!body.code) { err.textContent = "Enter a code."; err.hidden = false; return; }
+    if (!body.coder_id) { err.textContent = "Enter your coder ID in the side panel first."; err.hidden = false; return; }
+    const phi = phiCheck(body.note); if (phi) { err.textContent = phi; err.hidden = false; return; }
+    try {
+      if (S.live) { const r = await api(`/cases/${encodeURIComponent(S.caseId)}/missed-codes`, { method: "POST", body: JSON.stringify(body) }); S.newEpisodes.add(r.episode_id); await loadCase(S.caseId); await refreshShared(); }
+      else {
+        const k = cur().case; const eid = Math.max(0, ...S.episodes.map((e) => e.episode_id)) + 1; const fid = Math.max(0, ...cur().findings.map((x) => x.finding_id)) + 1;
+        const ref = S.codes.find((x) => x.code === body.code && x.code_system === body.code_system);
+        S.episodes.unshift({ episode_id: eid, setting: k.setting, payer: k.payer, code: body.code, code_system: body.code_system, code_family: family(body.code, body.code_system), agent_bucket: null,
+          decision: "added", corrected_code: null, reason: body.reason, root_cause: body.root_cause, note: body.note, skill_id: null, skill_version: null, coder_id: body.coder_id, case_hash: "sample-" + k.case_id, created_at: new Date().toISOString() });
+        cur().findings.push({ finding_id: fid, code: body.code, code_system: body.code_system, description: ref ? ref.description : null, kind: body.code_system === "ICD-10-CM" ? "diagnosis" : "service",
+          source: "coder", bucket: "missed", rationale: "Added by a coder.", skill_id: null, skill_version: null, precedent_ids: [], pages_read: [], flags: ref ? [] : [{ type: "code_not_in_reference" }], review_status: "added", evidence: [], _msg: `Saved as episode ${eid}` });
+        S.stats.episodes = S.episodes.length; S.newEpisodes.add(eid);
+      }
+      $("addMissed").hidden = true; setMode(); renderFindings();
+    } catch (e2) { err.textContent = e2.message; err.hidden = false; }
+  };
+});
+
+/* ---------------- memory ---------------- */
+function patterns() {
+  const groups = {};
+  for (const e of S.episodes) {
+    const key = [e.setting, e.payer, e.code_family, e.decision, e.reason, e.code, e.corrected_code].join("|");
+    const g = groups[key] || (groups[key] = { ...e, ids: [], cases: new Set(), coders: new Set(), notes: [] });
+    g.ids.push(e.episode_id); g.cases.add(e.case_hash); g.coders.add(e.coder_id); if (e.note) g.notes.push(e.note);
+  }
+  return Object.values(groups).map((g) => {
+    const why = REASON_TEXT[g.reason] || g.reason;
+    const head = g.decision === "rejected" ? `Coders rejected ${g.code}` : g.decision === "corrected" ? `Coders changed ${g.code} to ${g.corrected_code}` : `Coders added ${g.code}, which the agent had missed`;
+    return { ...g, text: `${head} in ${g.cases.size} past case(s), ${g.coders.size} coder(s): ${why}.` + (g.notes.length ? " Coder notes: " + g.notes.slice(0, 2).join(" | ") : "") };
+  }).sort((a, b) => b.cases.size - a.cases.size);
+}
+function renderMemory() {
+  document.querySelectorAll("#mtabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.m === S.memTab)));
+  const c = cur(); const t = S.memTab; let h = "";
+  if (t === "working") {
+    if (!c) { $("mbody").innerHTML = `<p class="empty">No case selected.</p>`; return; }
+    const ledger = c.findings.flatMap((f) => f.evidence.map((e) => ({ ...e, code: f.code })));
+    h = `<p class="lead">Working memory belongs to one case and is purged when the case is closed. Only the case summary is in the model's context at every step; the page map, page text and evidence ledger are stored and reached through tools. Showing ${esc(c.case.case_id)}.</p>
+      <p class="sec">Case summary · always in context</p><div class="summary">${esc(c.case.case_summary || "Not written yet. It is created on the first run.")}</div>
+      <p class="sec">Page map · ${(c.case.page_map || []).length} index cards</p><div class="scroll"><table><thead><tr><th class="n">Page</th><th>Type</th><th>Quality</th><th>Listed on the card</th></tr></thead><tbody>` +
+      (c.case.page_map || []).map((p) => `<tr><td class="n">${p.page}</td><td>${esc(p.page_type)}</td><td>${esc((p.quality || "clean").replace("_", " "))}</td><td>${esc([...(p.problems || []), ...(p.medications || []), ...(p.procedures || []), ...(p.abnormal_values || [])].join("; ")) || '<span class="muted">nothing listed</span>'}</td></tr>`).join("") + `</tbody></table></div>
+      <p class="sec">Evidence ledger · ${ledger.length} quotes</p><div class="scroll"><table><thead><tr><th>Code</th><th class="n">Page</th><th>Quote</th><th>Supports</th><th>Check</th></tr></thead><tbody>` +
+      (ledger.map((e) => `<tr><td class="mono">${esc(e.code)}</td><td class="n">${e.page}</td><td>${esc(e.quote)}</td><td>${esc(SUPPORTS[e.supports] || e.supports)}</td><td>${e.verified ? '<span class="ok-i">✓ on page</span>' : '<span class="bad-i">✗ not found</span>'}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">No evidence yet.</td></tr>`) + `</tbody></table></div>`;
+  } else if (t === "semantic") {
+    const looked = {}; if (c) c.trace.forEach((e) => { if (e.detail && e.detail.tool === "lookup_code") { const q = e.detail.args.query; looked[q] = (looked[q] || 0) + 1; } });
+    h = `<p class="lead">Semantic memory is the reference code sets and code-pair edits. The agent never writes to it and never loads it whole; it looks codes up one query at a time.</p>
+      <p class="sec">Lookups in this run</p><div class="chips">${Object.entries(looked).map(([q, n]) => `<span class="chip">${esc(q)} <span class="muted">×${n}</span></span>`).join("") || '<span class="empty">None.</span>'}</div>
+      <p class="sec">Search the code set</p><form class="searchrow" id="codeSearch"><input class="input" name="q" placeholder="A code or words, for example hypokalemia" style="max-width:420px" aria-label="Search codes"><button class="btn" type="submit">Search</button></form>
+      <div class="scroll" id="codeResults">${codeTable(S.live ? [] : S.codes)}</div>`;
+  } else if (t === "procedural") {
+    const p = S.proc || { ontology: { value_types: {} }, rule_packs: {}, skills: [] };
+    const rp = (p.rule_packs.ER || "").split("\n").filter((l) => /^\d+\./.test(l.trim())).map((l) => l.replace(/^\s*\d+\.\s*/, ""));
+    h = `<p class="lead">Procedural memory is how the agent works. The ontology says what every finding must carry, the ER rule pack holds the setting rules, and each skill is a playbook for one kind of condition or service. Skills are versioned files: read-only in production, changed only in dev. The agent sees one line per skill until it loads one.</p>
+      <p class="sec">Ontology · checked in code after every verdict</p><div class="cols">${Object.entries(p.ontology.value_types).map(([k, v]) => `<div class="box"><h3>${esc(k[0].toUpperCase() + k.slice(1))}</h3><ul>
+        <li>Needs all of: ${v.require_all.map((x) => `<b>${esc(SUPPORTS[x] || x)}</b>`).join(", ")}</li><li>And at least one of: ${v.require_any.map((x) => esc(SUPPORTS[x] || x)).join(", ")}</li></ul></div>`).join("")}</div>
+      <p class="sec">ER rule pack</p><div class="box"><ol>${rp.map((l) => `<li>${esc(l)}</li>`).join("")}</ol></div>
+      <p class="sec">Skills · ${p.skills.length}</p><div class="cols">${p.skills.map((s) => { const n = s.drift_flag_count, over = n >= S.driftThreshold;
+        return `<details class="skill"><summary><div class="fh"><b>${esc(s.title)}</b><span class="chip">v${esc(s.version)}</span><span class="badge ${over ? "b-unsupported" : n ? "b-needs_review" : ""}">${n} drift flag${n === 1 ? "" : "s"}</span></div>
+          <span class="muted" style="font-size:13px">${esc(s.description)}</span><span class="mono muted" style="font-size:12px">${esc(s.skill_id)} · applies to ${esc((s.applies_to || []).join(", "))}</span></summary><div class="body">${esc(s.body || "")}</div></details>`; }).join("")}</div>`;
+  } else {
+    const pats = patterns();
+    h = `<p class="lead">Episodic memory is coder feedback. Every rejection, correction or added code is saved at once, structured and without chart text. Before a verdict the agent gets the top patterns for the same setting, payer and code family, ranked by how many cases they recur in.</p>
+      <p class="sec">Patterns the agent is shown</p><div class="list">${pats.map((g) => `<div class="box" style="display:grid;gap:4px"><div class="fh"><span class="chip">${esc(g.code_family)}</span><span class="chip">${esc(g.payer)}</span><span class="badge b-${esc(g.decision)}">${esc(g.decision)}</span><span class="muted" style="font-size:12px">episodes ${g.ids.join(", ")}</span></div><span style="font-size:13px">${esc(g.text)}</span></div>`).join("") || '<p class="empty">No feedback yet.</p>'}</div>
+      <p class="sec">All episodes · ${S.episodes.length}</p><div class="scroll"><table><thead><tr><th class="n">ID</th><th>Code</th><th>Decision</th><th>Reason</th><th>Root cause</th><th>Skill</th><th>Payer</th><th>Coder</th><th>Note</th></tr></thead><tbody>` +
+      (S.episodes.map((e) => `<tr class="${S.newEpisodes.has(e.episode_id) ? "new" : ""}"><td class="n">${e.episode_id}</td><td class="mono">${esc(e.code)}${e.corrected_code ? " → " + esc(e.corrected_code) : ""}</td><td><span class="badge b-${esc(e.decision)}">${esc(e.decision)}</span></td>
+        <td>${esc(REASONS[e.reason] || e.reason)}</td><td>${esc(ROOTS[e.root_cause] || e.root_cause)}</td><td class="mono">${esc(e.skill_id ? e.skill_id + " v" + e.skill_version : "")}</td><td>${esc(e.payer)}</td><td>${esc(e.coder_id)}</td><td>${esc(e.note || "")}</td></tr>`).join("") || `<tr><td colspan="9" class="empty">No episodes yet.</td></tr>`) + `</tbody></table></div>`;
+  }
+  $("mbody").innerHTML = h;
+  const form = $("codeSearch");
+  if (form) form.onsubmit = async (e) => { e.preventDefault(); const q = new FormData(form).get("q").trim(); if (!q) return;
+    try { const rows = S.live ? await api(`/codes/search?q=${encodeURIComponent(q)}`) : S.codes.filter((x) => (x.code + " " + x.description).toLowerCase().includes(q.toLowerCase()));
+      $("codeResults").innerHTML = codeTable(rows, true); } catch (err) { $("codeResults").innerHTML = `<p class="err">${esc(err.message)}</p>`; } };
+}
+function codeTable(rows, searched) {
+  if (!rows.length) return `<p class="empty">${searched ? "No matching code." : "Search to see codes from the reference set."}</p>`;
+  return `<table><thead><tr><th>Code</th><th>Code set</th><th>Description</th></tr></thead><tbody>${rows.map((r) => `<tr><td class="mono">${esc(r.code)}</td><td>${esc(r.code_system)}</td><td>${esc(r.description)}</td></tr>`).join("")}</tbody></table>`;
+}
+$("mtabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-m]"); if (!b) return; S.memTab = b.dataset.m; renderMemory(); });
+
+/* ---------------- start ---------------- */
+(async function init() {
+  loadSample();
+  const saved = store.get("api", "");
+  const auto = saved || (location.protocol.startsWith("http") && location.pathname.endsWith("/console") ? location.origin : "");
+  if (auto) { try { await loadLive(auto); } catch { loadSample(); } }
+  setMode(); show("overview");
+})();
+</script>
+</body>
+</html>
